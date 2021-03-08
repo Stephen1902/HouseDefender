@@ -21,10 +21,16 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* SpringArmComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+	TSubclassOf<class AHDWeaponMaster> CurrentWeapon;
+
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
 	float GetCurrentRotation() const { return CurrentRotation; }
 
 protected:
+	void TryToFire();
+	void Fire();
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -40,5 +46,12 @@ private:
 
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
+
+	float TimeLastFired;
+	float TimeReloadStarted;
+
+	// Mouse Co-ordinates to calculate rotation of player and firing location
+	float MouseX;
+	float MouseY;
 
 };

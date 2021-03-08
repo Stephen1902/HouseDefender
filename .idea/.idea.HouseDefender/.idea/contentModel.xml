@@ -49356,6 +49356,8 @@
           <e p="HDGameModeBase.h" t="Include" />
           <e p="HDPlayerCharacter.cpp" t="Include" />
           <e p="HDPlayerCharacter.h" t="Include" />
+          <e p="HDWeaponMaster.cpp" t="Include" />
+          <e p="HDWeaponMaster.h" t="Include" />
           <e p="HouseDefender.Build.cs" t="Include" />
           <e p="HouseDefender.cpp" t="Include" />
           <e p="HouseDefender.h" t="Include" />
