@@ -49352,6 +49352,10 @@
       <e p="packages" t="ExcludeRecursive" />
       <e p="Source" t="Include">
         <e p="HouseDefender" t="Include">
+          <e p="HDAIController.cpp" t="Include" />
+          <e p="HDAIController.h" t="Include" />
+          <e p="HDEnemyMaster.cpp" t="Include" />
+          <e p="HDEnemyMaster.h" t="Include" />
           <e p="HDGameModeBase.cpp" t="Include" />
           <e p="HDGameModeBase.h" t="Include" />
           <e p="HDPlayerCharacter.cpp" t="Include" />
