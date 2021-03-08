@@ -49331,10 +49331,14 @@
     <e p="C:\Users\nicho\AppData\Local\JetBrains\Rider2020.3\extResources" t="IncludeRecursive" />
     <e p="C:\Users\nicho\AppData\Local\JetBrains\Rider2020.3\resharper-host\Local\Transient\Rider\v203\SolutionCaches\_HouseDefender.-1344144411.00" t="ExcludeRecursive" />
     <e p="D:\Unreal Projects\HouseDefender" t="IncludeFlat">
+      <e p=".gitattributes" t="Include" />
+      <e p=".gitignore" t="Include" />
       <e p="Config" t="Include">
         <e p="DefaultEditor.ini" t="Include" />
+        <e p="DefaultEditorPerProjectUserSettings.ini" t="Include" />
         <e p="DefaultEngine.ini" t="Include" />
         <e p="DefaultGame.ini" t="Include" />
+        <e p="DefaultInput.ini" t="Include" />
       </e>
       <e p="Engine" t="Include" />
       <e p="Games" t="Include" />
@@ -49348,6 +49352,10 @@
       <e p="packages" t="ExcludeRecursive" />
       <e p="Source" t="Include">
         <e p="HouseDefender" t="Include">
+          <e p="HDGameModeBase.cpp" t="Include" />
+          <e p="HDGameModeBase.h" t="Include" />
+          <e p="HDPlayerCharacter.cpp" t="Include" />
+          <e p="HDPlayerCharacter.h" t="Include" />
           <e p="HouseDefender.Build.cs" t="Include" />
           <e p="HouseDefender.cpp" t="Include" />
           <e p="HouseDefender.h" t="Include" />

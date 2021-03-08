@@ -43,6 +43,7 @@
 
 # Starter Content
 Content/StarterContent/*
+Content/AnimStarterPack/*
 
 # Precompiled Assets
 SourceArt/**/*.png
@@ -80,3 +81,4 @@ DerivedDataCache/*
 Content/IndustryPropsPack6/
 Content/VehicleVarietyPack/
 
+Content/Mannequin/
