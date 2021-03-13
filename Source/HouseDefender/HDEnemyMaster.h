@@ -8,6 +8,8 @@
 #include "GameFramework/Pawn.h"
 #include "HDEnemyMaster.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, class UUserWidget*, EnemyPawnWidget, float, NewEnemyHealth);
+
 UCLASS()
 class HOUSEDEFENDER_API AHDEnemyMaster : public APawn
 {
@@ -26,12 +28,19 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
 	class UPawnMovementComponent* MovementComponent;
 
+	// Information for enemy health bar
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Enemy Pawn")
+	class UWidgetComponent* WidgetComp;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
 	float StartingLife;
 
 	// distance covered in seconds
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
 	float MovementSpeed;
+
+	UPROPERTY(BlueprintAssignable, Category = "Enemy Pawn")
+	FOnEnemyHit OnEnemyHit;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -66,6 +75,8 @@ private:
 
 	float CurrentLife;
 
+	FVector WidgetLocationAtStart;
+
 	FTimerHandle TimerHandle_EndOfLife;
 
 	void DestroyEnemy();
@@ -78,4 +89,5 @@ private:
 	class AHDPlayerCharacter* PlayerCharacter;
 
 	void GetPlayerCharacter();
+	void UpdateWidget();
 };

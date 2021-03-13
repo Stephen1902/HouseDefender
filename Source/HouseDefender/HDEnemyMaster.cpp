@@ -3,9 +3,9 @@
 
 #include "HDEnemyMaster.h"
 #include "TimerManager.h"
-
 #include "HDAIController.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 
 // Sets default values
@@ -33,6 +33,11 @@ AHDEnemyMaster::AHDEnemyMaster()
 	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AHDEnemyMaster::OnBeginOverlap);
 	CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AHDEnemyMaster::OnEndOverlap);
 
+	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
+	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	WidgetComp->SetDrawSize(FVector2D(100.f, 20.f));
+	WidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+	
 	StartingLife = 100.f;
 	MovementSpeed = 20.f;
 }
@@ -43,7 +48,9 @@ void AHDEnemyMaster::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentLife = StartingLife;
-
+	WidgetLocationAtStart = WidgetComp->GetRelativeLocation();
+	WidgetComp->SetVisibility(false);
+	
 	GetPlayerCharacter();
 	
 }
@@ -54,6 +61,7 @@ void AHDEnemyMaster::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	MoveTowardsPlayer(DeltaTime);
+	UpdateWidget();
 }
 
 // Called to bind functionality to input
@@ -90,20 +98,28 @@ bool AHDEnemyMaster::GetIsDead() const
 
 void AHDEnemyMaster::SetCurrentLife(const float LifeTakenOff)
 {
+	if (!WidgetComp->IsWidgetVisible())
+	{
+		WidgetComp->SetVisibility(true);
+	}
+
+	
 	CurrentLife -= LifeTakenOff;
 
+	const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
+	UE_LOG(LogTemp, Warning, TEXT("Current Life Percentage is %s"), *FString::SanitizeFloat(CurrentLifeAsPercent));
+	UUserWidget* UserWidget = WidgetComp->GetUserWidgetObject();
+	OnEnemyHit.Broadcast(UserWidget, CurrentLifeAsPercent);
+
+	// Play the hit animation
 	SetHasBeenHit(true);
 	
 	// Check if the enemy is dead and, after the delay for the death animation, destroy it
 	if (GetIsDead())
 	{
+		WidgetComp->SetVisibility(false);
 		GetWorldTimerManager().SetTimer(TimerHandle_EndOfLife, this, &AHDEnemyMaster::DestroyEnemy, 3.15f, false, -1.f);
 	}
-	// if enemy is not dead, play hit animation
-//	else
-//	{
-//		SetHasBeenHit(true);
-//	}
 }
 
 void AHDEnemyMaster::DestroyEnemy()
@@ -139,5 +155,12 @@ void AHDEnemyMaster::GetPlayerCharacter()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to get player character"));
 	}
+}
+
+void AHDEnemyMaster::UpdateWidget()
+{
+	const FVector CurrentEnemyLocation = MeshComponent->GetRelativeLocation();
+	const float NewZHeight = (CapsuleComponent->GetUnscaledCapsuleHalfHeight() * 2) + 40.f; 
+	WidgetComp->SetRelativeLocation(FVector(CurrentEnemyLocation.X, CurrentEnemyLocation.Y, CurrentEnemyLocation.Z + NewZHeight));
 }
 
