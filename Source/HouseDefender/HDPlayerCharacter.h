@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "HDPlayerCharacter.generated.h"
 
+#define SURFACE_FleshStandard		SurfaceType1
+#define SURFACE_FleshVulnerable		SurfaceType2
+
 UCLASS()
 class HOUSEDEFENDER_API AHDPlayerCharacter : public ACharacter
 {

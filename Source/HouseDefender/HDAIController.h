@@ -13,5 +13,6 @@ UCLASS()
 class HOUSEDEFENDER_API AHDAIController : public AAIController
 {
 	GENERATED_BODY()
-	
+
+
 };

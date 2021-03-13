@@ -2,10 +2,11 @@
 
 
 #include "HDPlayerCharacter.h"
-
-
-
+#include "Kismet/GameplayStatics.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "DrawDebugHelpers.h"
+#include "HDAIController.h"
+#include "HDEnemyMaster.h"
 #include "HDWeaponMaster.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -72,14 +73,40 @@ void AHDPlayerCharacter::Fire()
 	
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
-	DrawDebugLine(GetWorld(), StartLoc, EndLoc, FColor::Green, true);
+	CollisionParams.bReturnPhysicalMaterial = true;
+	// CollisionParams.bTraceComplex = true;
+
+		DrawDebugLine(GetWorld(), StartLoc, EndLoc, FColor::Green, true);
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc, EndLoc, ECC_Visibility, CollisionParams))
 	{
-		FString HitActor = HitResult.GetActor()->GetName();
-		UE_LOG(LogTemp, Warning, TEXT("I hit %s"), *HitActor);
+
+		if (AHDEnemyMaster* EnemyMaster = Cast<AHDEnemyMaster>(HitResult.GetActor()))
+		{
+			if (CurrentWeapon != nullptr)
+			{
+				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
+
+				float DamageMultiplier = 1.f;
+			
+				switch (SurfaceType)
+				{
+				case SURFACE_FleshStandard:
+				default:
+					DamageMultiplier = 1.f;
+					break;
+				case SURFACE_FleshVulnerable:
+					DamageMultiplier = CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->HeadshotBonus;
+					break;
+				}
+
+				EnemyMaster->SetCurrentLife(CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->DamagePerShot * DamageMultiplier);
+			}			
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("I hit something that wasn't an enemy"));
+		}		
 	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("Start: %s, End: %s"), *StartLoc.ToString(), *EndLoc.ToString());
 }
 
 // Called when the game starts or when spawned

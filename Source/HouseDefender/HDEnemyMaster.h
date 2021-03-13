@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "HDPlayerCharacter.h"
 #include "GameFramework/Pawn.h"
 #include "HDEnemyMaster.generated.h"
 
@@ -23,6 +25,13 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
 	class UPawnMovementComponent* MovementComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
+	float StartingLife;
+
+	// distance covered in seconds
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
+	float MovementSpeed;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -35,4 +44,38 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION()
+	void OnBeginOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION()
+	void OnEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
+    bool GetHasBeenHit() const { return bHasBeenHit; }
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
+    void SetHasBeenHit(bool NewHitIn);
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
+	bool GetIsDead() const;
+
+	void SetCurrentLife(float LifeTakenOff);
+
+private:
+	bool bHasBeenHit = false;
+
+	float CurrentLife;
+
+	FTimerHandle TimerHandle_EndOfLife;
+
+	void DestroyEnemy();
+
+	FTimerHandle TimerHandle_HasBeenHit;
+	void ClearHasBeenHit();
+
+	void MoveTowardsPlayer(float DeltaTime);
+
+	class AHDPlayerCharacter* PlayerCharacter;
+
+	void GetPlayerCharacter();
 };

@@ -6,10 +6,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e946507d-a1b7-4d22-a065-ea551f1b6095" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/SK_Rifle.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/SK_Rifle.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultEditor.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEditor.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Enemies/NewBlueprint.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Enemies/NewBlueprint.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/BP_Player.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/BP_Player.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/BP_Rifle.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/BP_Rifle.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/HouseDefender.uproject" beforeDir="false" afterPath="$PROJECT_DIR$/HouseDefender.uproject" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDAIController.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDAIController.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HouseDefender.Build.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HouseDefender.Build.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,10 +32,13 @@
     <changedPaths>
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDWeaponMaster.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDWeaponMaster.h" />
-      <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" />
-      <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDAIController.h" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDAIController.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HouseDefender.Build.cs" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1pTETYdAdFre5FOOOLjlevg8TpB" />
@@ -462,7 +474,10 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1615198691956</updated>
-      <workItem from="1615198707656" duration="25819000" />
+      <workItem from="1615198707656" duration="25901000" />
+      <workItem from="1615392638328" duration="22303000" />
+      <workItem from="1615643828375" duration="378000" />
+      <workItem from="1615644605621" duration="3253000" />
     </task>
     <servers />
   </component>
