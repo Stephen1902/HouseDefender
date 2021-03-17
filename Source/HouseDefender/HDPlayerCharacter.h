@@ -46,6 +46,7 @@ public:
 
 private:
 	void Look(float AxisValue);
+	void GetTargetPoints();
 
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
@@ -57,4 +58,15 @@ private:
 	float MouseX;
 	float MouseY;
 
+	// Target points for the player to move to at the start / end of the day
+	class ATargetPoint* TPDayStart;
+	class ATargetPoint* TPDayEnd;
+	class ATargetPoint* TPEnemySpawn;
+
+	// Player Controller
+	class APlayerController* PC;
+
+	bool bIsAtStartPoint = false;
+	bool bIsAtEndPoint = true;
+	bool bDayHasStarted = false;
 };

@@ -61,7 +61,7 @@ void AHDEnemyMaster::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	MoveTowardsPlayer(DeltaTime);
-	UpdateWidget();
+	UpdateWidgetLocation();
 }
 
 // Called to bind functionality to input
@@ -98,18 +98,10 @@ bool AHDEnemyMaster::GetIsDead() const
 
 void AHDEnemyMaster::SetCurrentLife(const float LifeTakenOff)
 {
-	if (!WidgetComp->IsWidgetVisible())
-	{
-		WidgetComp->SetVisibility(true);
-	}
-
-	
 	CurrentLife -= LifeTakenOff;
 
-	const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
-	UE_LOG(LogTemp, Warning, TEXT("Current Life Percentage is %s"), *FString::SanitizeFloat(CurrentLifeAsPercent));
-	UUserWidget* UserWidget = WidgetComp->GetUserWidgetObject();
-	OnEnemyHit.Broadcast(UserWidget, CurrentLifeAsPercent);
+	// Update the enemy widget
+	UpdateWidgetInformation();
 
 	// Play the hit animation
 	SetHasBeenHit(true);
@@ -157,10 +149,22 @@ void AHDEnemyMaster::GetPlayerCharacter()
 	}
 }
 
-void AHDEnemyMaster::UpdateWidget()
+void AHDEnemyMaster::UpdateWidgetLocation() const
 {
 	const FVector CurrentEnemyLocation = MeshComponent->GetRelativeLocation();
 	const float NewZHeight = (CapsuleComponent->GetUnscaledCapsuleHalfHeight() * 2) + 40.f; 
 	WidgetComp->SetRelativeLocation(FVector(CurrentEnemyLocation.X, CurrentEnemyLocation.Y, CurrentEnemyLocation.Z + NewZHeight));
+}
+
+void AHDEnemyMaster::UpdateWidgetInformation() const
+{
+	if (!WidgetComp->IsWidgetVisible())
+	{
+		WidgetComp->SetVisibility(true);
+	}
+
+	const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
+	UUserWidget* UserWidget = WidgetComp->GetUserWidgetObject();
+	OnEnemyHit.Broadcast(UserWidget, CurrentLifeAsPercent);
 }
 

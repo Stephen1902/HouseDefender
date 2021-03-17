@@ -89,5 +89,6 @@ private:
 	class AHDPlayerCharacter* PlayerCharacter;
 
 	void GetPlayerCharacter();
-	void UpdateWidget();
+	void UpdateWidgetLocation() const;
+	void UpdateWidgetInformation() const;
 };
