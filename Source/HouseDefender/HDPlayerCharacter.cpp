@@ -39,14 +39,18 @@ void AHDPlayerCharacter::TryToFire()
 		if (TimeLastFired < GetWorld()->GetTimeSeconds() - CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireRate)
 		{
 			// Check the weapon has ammo
-//			if (CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInWeapon > 0)
+			if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip > 0)
 			{
 				// Call the fire function
 				Fire();
 			}
-//			else
+			else
 			{
-				//		TryToReload();
+				// Check there is ammo available to reload into the gun
+				if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo > 0)
+				{
+					Reload();
+				}
 			}
 		}
 	}
@@ -56,10 +60,13 @@ void AHDPlayerCharacter::Fire()
 {
 	TimeLastFired = GetWorld()->GetTimeSeconds();
 
+	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip--;
+	UpdateAmmo();
+	
 	FHitResult HitResult;
 	const FVector StartLoc = GetMesh()->GetSocketLocation(FName("FiringSocket"));
 	
-	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * -CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireDistance) + StartLoc;
+	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * - CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireDistance) + StartLoc;
 
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
@@ -129,6 +136,8 @@ void AHDPlayerCharacter::BeginPlay()
 	
 	GetTargetPoints();
 	//SetDayStartCameraLocation();
+	WeaponSelected(0);
+	UpdateAmmo();
 }
 
 // Called every frame
@@ -339,5 +348,31 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 		}
 		
 		CurrentEnumIndex = static_cast<uint8>(WeaponSelectedIn);
+
+		UpdateAmmo();
 	}
+}
+
+void AHDPlayerCharacter::Reload()
+{
+	// TODO Add timer so reload takes time as per weapon 
+	const int32 AmmoToAmend = FMath::Min(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->MagazineSize, CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo);
+	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip += AmmoToAmend;
+	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo -= AmmoToAmend;
+
+	UpdateAmmo();
+}
+
+void AHDPlayerCharacter::UpdateAmmo()
+{
+	FText NewAmmoInClip = FText::FromString(FString::FromInt(0));
+	FText NewAmmoAvailable = FText::FromString(FString::FromInt(0));
+	
+	if (CurrentEnumIndex > 0)
+	{
+		NewAmmoInClip = FText::FromString(FString::FromInt(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip));
+		NewAmmoAvailable = FText::FromString(FString::FromInt(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo));
+	}
+
+	OnAmmoUpdated.Broadcast(NewAmmoInClip, NewAmmoAvailable);
 }

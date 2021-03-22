@@ -27,8 +27,8 @@ void AHDWeaponMaster::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CurrentAmmoForWeapon = MagazineSize;
-	CurrentAmmoInWeapon = MagazineSize;
+	CurrentAmmoInClip = MagazineSize;
+	TotalAmmo = MagazineSize;
 }
 
 // Called every frame

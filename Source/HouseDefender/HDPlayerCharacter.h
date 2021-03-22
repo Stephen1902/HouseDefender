@@ -10,7 +10,6 @@
 #define SURFACE_FleshVulnerable		SurfaceType2
 #define SURFACE_FleshArmoured		SurfaceType3
 
-
 UENUM(BlueprintType)
 enum class ECurrentWeapon : uint8
 {
@@ -21,6 +20,7 @@ enum class ECurrentWeapon : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, ECurrentWeapon, NewWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoUpdated, FText, NewAmmoInClip, FText, NewAmmoAvailable);
 DECLARE_DELEGATE_OneParam(FKeyboardWeaponSelect, int32);
 
 UCLASS()
@@ -50,6 +50,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character Weapon")
 	ECurrentWeapon GetCurrentPlayerWeapon() { return CurrentPlayerWeapon; }
 
+	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
+	FOnAmmoUpdated OnAmmoUpdated;
+	
 protected:
 	void TryToFire();
 	void Fire();
@@ -73,6 +76,8 @@ private:
 	void CheckForLivingEnemies();
 	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
 	void WeaponSelected(int32 WeaponSelectedIn);
+	void Reload();
+	void UpdateAmmo();
 	
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
@@ -104,4 +109,5 @@ private:
 	// Current Enum Index
 	uint8 CurrentEnumIndex;
 };
+
 
