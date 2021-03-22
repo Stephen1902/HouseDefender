@@ -38,9 +38,18 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	float FireDistance;
-	
+
+	// Total ammo the weapon can hold per clip
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	int32 MagazineSize;
+
+	// Total ammo available to the player Clip + Reserve 
+	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
+	int32 TotalAmmo;
+
+	// Ammo currently in the clip
+	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
+	int32 CurrentAmmoInClip;
 
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	float ReloadTime;

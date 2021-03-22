@@ -31,11 +31,12 @@ AHDPlayerCharacter::AHDPlayerCharacter()
 
 void AHDPlayerCharacter::TryToFire()
 {
+
 	// Check if a valid weapon is available and that the day has started
-	if (CurrentWeapon != nullptr) // && bDayHasStarted)
+	if (CurrentWeapon.Num() > 0 && CurrentEnumIndex > 0)
 	{
 		// Check enough time has passed since last firing against the weapon's fire rate
-		if (TimeLastFired < GetWorld()->GetTimeSeconds() - CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->FireRate)
+		if (TimeLastFired < GetWorld()->GetTimeSeconds() - CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireRate)
 		{
 			// Check the weapon has ammo
 //			if (CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInWeapon > 0)
@@ -58,7 +59,7 @@ void AHDPlayerCharacter::Fire()
 	FHitResult HitResult;
 	const FVector StartLoc = GetMesh()->GetSocketLocation(FName("FiringSocket"));
 	
-	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * -CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->FireDistance) + StartLoc;
+	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * -CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireDistance) + StartLoc;
 
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
@@ -72,30 +73,27 @@ void AHDPlayerCharacter::Fire()
 		// Check if what was hit by the line trace was an enemy character
 		if (AHDEnemyMaster* EnemyMaster = Cast<AHDEnemyMaster>(HitResult.GetActor()))
 		{
-			if (CurrentWeapon != nullptr)
-			{
-				// Check location hit by line trace to see if extra damage is required
-				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
+			// Check location hit by line trace to see if extra damage is required
+			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 
-				float DamageMultiplier = 1.f;
-				float ArmourPenalty = 1.f;
+			float DamageMultiplier = 1.f;
+			float ArmourPenalty = 1.f;
 			
-				switch (SurfaceType)
-				{
-				case SURFACE_FleshStandard:
-				default:
-					DamageMultiplier = 1.f;
-					break;
-				case SURFACE_FleshVulnerable:
-					DamageMultiplier = CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->VulnerableBonus;
-					break;
-				case SURFACE_FleshArmoured:
-					ArmourPenalty = CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->ArmourPenalty;
-					break;
-				}
+			switch (SurfaceType)
+			{
+			case SURFACE_FleshStandard:
+			default:
+				DamageMultiplier = 1.f;
+				break;
+			case SURFACE_FleshVulnerable:
+				DamageMultiplier = CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->VulnerableBonus;
+				break;
+			case SURFACE_FleshArmoured:
+				ArmourPenalty = CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->ArmourPenalty;
+				break;
+			}
 
-				EnemyMaster->SetCurrentLife(CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->DamagePerShot * DamageMultiplier * ArmourPenalty);
-			}			
+			EnemyMaster->SetCurrentLife(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->DamagePerShot * DamageMultiplier * ArmourPenalty);			
 		}
 	}
 }
@@ -105,9 +103,13 @@ void AHDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (CurrentWeapon == nullptr)
+	if (CurrentWeapon.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon not set in blueprint.  Game cannot proceed."));
+	}
+	else
+	{
+		
 	}
 
 	PC = Cast<APlayerController>(GetController());
@@ -162,7 +164,9 @@ void AHDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAxis("LookUp", this, &AHDPlayerCharacter::Look);
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHDPlayerCharacter::TryToFire);
-
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot1", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 1);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot2", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 2);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot3", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 3);
 }
 
 void AHDPlayerCharacter::Look(float AxisValue)
@@ -303,5 +307,37 @@ void AHDPlayerCharacter::MoveCameraToNewLocation(AActor* ActorToMoveTo) const
 	PC->SetViewTargetWithBlend(ActorToMoveTo, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic);
 }
 
+void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
+{
+	if (CurrentEnumIndex != static_cast<uint8>(WeaponSelectedIn))
+	{
+		if (WeaponToSpawn)
+		{
+			WeaponToSpawn->Destroy();
+		}
 
+		const FActorSpawnParameters SpawnParameters;
+		WeaponToSpawn = GetWorld()->SpawnActor<AHDWeaponMaster>(CurrentWeapon[WeaponSelectedIn], GetActorLocation(), GetActorRotation(), SpawnParameters);
+		const FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
+		WeaponToSpawn->AttachToComponent(GetMesh(), TransformRules, FName("WeaponSocket"));
 
+		switch(WeaponSelectedIn)
+		{
+			case 0:
+			default:
+				CurrentPlayerWeapon = ECurrentWeapon::CW_None;
+				break;
+			case 1:
+				CurrentPlayerWeapon = ECurrentWeapon::CW_Pistol;
+				break;
+			case 2:
+				CurrentPlayerWeapon = ECurrentWeapon::CW_Shotgun;
+				break;
+			case 3:
+				CurrentPlayerWeapon = ECurrentWeapon::CW_Rifle;
+				break;
+		}
+		
+		CurrentEnumIndex = static_cast<uint8>(WeaponSelectedIn);
+	}
+}

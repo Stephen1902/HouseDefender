@@ -10,6 +10,19 @@
 #define SURFACE_FleshVulnerable		SurfaceType2
 #define SURFACE_FleshArmoured		SurfaceType3
 
+
+UENUM(BlueprintType)
+enum class ECurrentWeapon : uint8
+{
+	CW_None			UMETA(DisplayName = "No Weapon"),
+	CW_Pistol		UMETA(DisplayName = "Pistol"),
+	CW_Shotgun		UMETA(DisplayName = "Shotgun"),
+	CW_Rifle		UMETA(DisplayName = "Rifle")
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, ECurrentWeapon, NewWeapon);
+DECLARE_DELEGATE_OneParam(FKeyboardWeaponSelect, int32);
+
 UCLASS()
 class HOUSEDEFENDER_API AHDPlayerCharacter : public ACharacter
 {
@@ -26,10 +39,16 @@ public:
 	class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
-	TSubclassOf<class AHDWeaponMaster> CurrentWeapon;
+	TArray<TSubclassOf<class AHDWeaponMaster>> CurrentWeapon;
 
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
 	float GetCurrentRotation() const { return CurrentRotation; }
+
+	UPROPERTY(EditAnywhere, Category = "Character Weapon")
+	ECurrentWeapon CurrentPlayerWeapon;
+
+	UFUNCTION(BlueprintCallable, Category = "Character Weapon")
+	ECurrentWeapon GetCurrentPlayerWeapon() { return CurrentPlayerWeapon; }
 
 protected:
 	void TryToFire();
@@ -53,7 +72,8 @@ private:
 	void MovePlayerToDayEndPosition(float DeltaTime);
 	void CheckForLivingEnemies();
 	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
-
+	void WeaponSelected(int32 WeaponSelectedIn);
+	
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
 
@@ -77,4 +97,11 @@ private:
 
 	// Game State
 	class AHDGameStateBase* GSBase;
+
+	// Current game weapon
+	AHDWeaponMaster* WeaponToSpawn = nullptr;
+
+	// Current Enum Index
+	uint8 CurrentEnumIndex;
 };
+
