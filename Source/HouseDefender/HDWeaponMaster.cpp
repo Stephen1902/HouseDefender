@@ -14,7 +14,8 @@ AHDWeaponMaster::AHDWeaponMaster()
 
 	WeaponName = FText::FromString("Default Name");
 	DamagePerShot = 20.f;
-	HeadshotBonus = 1.5f;
+	VulnerableBonus = 1.5f;
+	ArmourPenalty = 1.0f;
 	FireRate = 0.2f;
 	FireDistance = 500.f;
 	MagazineSize = 20;

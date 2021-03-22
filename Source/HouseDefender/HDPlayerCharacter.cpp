@@ -7,8 +7,10 @@
 #include "DrawDebugHelpers.h"
 #include "HDAIController.h"
 #include "HDEnemyMaster.h"
+#include "HDGameStateBase.h"
 #include "HDWeaponMaster.h"
 #include "Camera/CameraComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -20,13 +22,11 @@ AHDPlayerCharacter::AHDPlayerCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm Comp"));
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	SpringArmComponent->SetupAttachment(GetMesh());
 	
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Comp"));
-	CameraComponent->SetupAttachment(SpringArmComponent);
-	
-
+	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	CameraComp->SetupAttachment(SpringArmComponent);
 }
 
 void AHDPlayerCharacter::TryToFire()
@@ -78,6 +78,7 @@ void AHDPlayerCharacter::Fire()
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 
 				float DamageMultiplier = 1.f;
+				float ArmourPenalty = 1.f;
 			
 				switch (SurfaceType)
 				{
@@ -86,11 +87,14 @@ void AHDPlayerCharacter::Fire()
 					DamageMultiplier = 1.f;
 					break;
 				case SURFACE_FleshVulnerable:
-					DamageMultiplier = CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->HeadshotBonus;
+					DamageMultiplier = CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->VulnerableBonus;
+					break;
+				case SURFACE_FleshArmoured:
+					ArmourPenalty = CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->ArmourPenalty;
 					break;
 				}
 
-				EnemyMaster->SetCurrentLife(CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->DamagePerShot * DamageMultiplier);
+				EnemyMaster->SetCurrentLife(CurrentWeapon->GetDefaultObject<AHDWeaponMaster>()->DamagePerShot * DamageMultiplier * ArmourPenalty);
 			}			
 		}
 	}
@@ -107,12 +111,22 @@ void AHDPlayerCharacter::BeginPlay()
 	}
 
 	PC = Cast<APlayerController>(GetController());
+	GSBase = Cast<AHDGameStateBase>(GetWorld()->GetGameState());
+
+	if (GSBase)
+	{
+		GSBase->SetGameStatus(EGameStatus::GS_DayStarting);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Game State Base has not been set."));
+	}
 	
 	TimeLastFired = 0.f;
 	TimeReloadStarted = 0.f;
-	bDayHasStarted = false;
 	
 	GetTargetPoints();
+	//SetDayStartCameraLocation();
 }
 
 // Called every frame
@@ -120,10 +134,24 @@ void AHDPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!FMath::IsNearlyEqual(GetActorLocation().X, TPDayStart->GetActorLocation().X, 20.f) && !bDayHasStarted)
+	if (GSBase)
 	{
-		AddMovementInput(FVector(100.f * DeltaTime, 0.f, 0.f));
+		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarting)
+		{
+			MovePlayerToDayStartPosition(DeltaTime);
+		}
+
+		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarted)
+		{
+			CheckForLivingEnemies();
+		}
+
+		if (GSBase->GetGameStatus() == EGameStatus::GS_DayEnding)
+		{
+			MovePlayerToDayEndPosition(DeltaTime);
+		}
 	}
+
 }
 
 // Called to bind functionality to input
@@ -179,12 +207,101 @@ void AHDPlayerCharacter::GetTargetPoints()
 		{
 			TPEnemySpawn = ThisTP;
 		}
+
+		if (TP->GetName() == TEXT("TPPlayerViewLocation"))
+		{
+			DayViewLocation = TP;
+		}
 	}
-	
-	if (!TPDayStart || !TPDayEnd || !TPEnemySpawn)
+
+	if (!TPDayStart || !TPDayEnd || !TPEnemySpawn || !DayViewLocation)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Target Point(s) for the player have not been set.  Please Check."));
 	}
 }
+
+void AHDPlayerCharacter::SetDayStartCameraLocation()
+{
+	FVector CurrentCameraLocation = DayViewLocation->GetActorLocation();
+
+	// Get the midway point between the player location at day start and enemy spawn point
+	MidPointBetweenDayStartAndEnemySpawn = (TPDayStart->GetDistanceTo(TPEnemySpawn)) / 2;
+
+	// Set Y location to the midpoint between the 2 less 400 (4 metres) so enemies do not spawn on screen
+	CurrentCameraLocation.X = (MidPointBetweenDayStartAndEnemySpawn + 400.f); 
+	
+	DayViewLocation->SetActorLocation(CurrentCameraLocation);
+
+	// TODO Set up proper game start status to move player and spawn enemies
+	MoveCameraToNewLocation(DayViewLocation);
+}
+
+void AHDPlayerCharacter::MovePlayerToDayStartPosition(float DeltaTime)
+{
+	if (!FMath::IsNearlyEqual(GetActorLocation().X, TPDayStart->GetActorLocation().X, 20.f))
+	{
+		AddMovementInput(FVector(100.f * DeltaTime, 0.f, 0.f));
+		
+		if (!FMath::IsNearlyEqual(GetMesh()->GetRelativeRotation().Yaw, -90.f, 20.f))
+		{
+			const float GetCurrentYawRotation = GetMesh()->GetRelativeRotation().Yaw;
+			const float NewYaw = GetCurrentYawRotation + (120.f * DeltaTime);
+			GetMesh()->SetRelativeRotation(FRotator(0.f, NewYaw, 0.f));
+		}
+	}
+	else
+	{
+		if (GSBase->GameStatus != EGameStatus::GS_DayStarted)
+		{
+			SetDayStartCameraLocation();		
+			GSBase->SetGameStatus(EGameStatus::GS_DayStarted);
+		}
+	}
+}
+
+void AHDPlayerCharacter::MovePlayerToDayEndPosition(float DeltaTime)
+{
+	if (!FMath::IsNearlyEqual(GetActorLocation().X, TPDayEnd->GetActorLocation().X, 20.f))
+	{
+		AddMovementInput(FVector(-100.f * DeltaTime, 0.f, 0.f));
+
+		if (!FMath::IsNearlyEqual(GetMesh()->GetRelativeRotation().Yaw, -270.f, 20.f))
+		{
+			const float GetCurrentYawRotation = GetMesh()->GetRelativeRotation().Yaw;
+			const float NewYaw = GetCurrentYawRotation - (120.f * DeltaTime);
+			GetMesh()->SetRelativeRotation(FRotator(0.f, NewYaw, 0.f));
+		}
+	}
+	else
+	{
+		if (GSBase->GameStatus != EGameStatus::GS_Idle)
+		{
+			GetMesh()->SetRelativeRotation(FRotator(0.f, -270.f, 0.f));
+			GSBase->SetGameStatus(EGameStatus::GS_Idle);
+		}
+	}
+}
+
+void AHDPlayerCharacter::CheckForLivingEnemies()
+{
+	if (GSBase->GameStatus == EGameStatus::GS_DayStarted)
+	{
+		TArray<AActor*> FoundEnemies;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHDEnemyMaster::StaticClass(), FoundEnemies);
+
+		if (FoundEnemies.Num() == 0)
+		{
+			MoveCameraToNewLocation(this);
+			GSBase->SetGameStatus(EGameStatus::GS_DayEnding);
+		}
+	}
+}
+
+void AHDPlayerCharacter::MoveCameraToNewLocation(AActor* ActorToMoveTo) const
+{
+	// Set the camera to a new position, depending on game state 
+	PC->SetViewTargetWithBlend(ActorToMoveTo, 0.5f, EViewTargetBlendFunction::VTBlend_Cubic);
+}
+
 
 

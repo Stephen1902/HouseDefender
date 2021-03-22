@@ -8,6 +8,7 @@
 
 #define SURFACE_FleshStandard		SurfaceType1
 #define SURFACE_FleshVulnerable		SurfaceType2
+#define SURFACE_FleshArmoured		SurfaceType3
 
 UCLASS()
 class HOUSEDEFENDER_API AHDPlayerCharacter : public ACharacter
@@ -18,11 +19,11 @@ public:
 	// Sets default values for this character's properties
 	AHDPlayerCharacter();
 
-	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class UCameraComponent* CameraComponent;
-
-	UPROPERTY(VisibleAnywhere, Category = Camera)
+	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class USpringArmComponent* SpringArmComponent;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Camera")
+	class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 	TSubclassOf<class AHDWeaponMaster> CurrentWeapon;
@@ -47,6 +48,11 @@ public:
 private:
 	void Look(float AxisValue);
 	void GetTargetPoints();
+	void SetDayStartCameraLocation();
+	void MovePlayerToDayStartPosition(float DeltaTime);
+	void MovePlayerToDayEndPosition(float DeltaTime);
+	void CheckForLivingEnemies();
+	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
 
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
@@ -62,11 +68,13 @@ private:
 	class ATargetPoint* TPDayStart;
 	class ATargetPoint* TPDayEnd;
 	class ATargetPoint* TPEnemySpawn;
+	class AActor* DayViewLocation;
+
+	float MidPointBetweenDayStartAndEnemySpawn = 0.f;
 
 	// Player Controller
 	class APlayerController* PC;
 
-	bool bIsAtStartPoint = false;
-	bool bIsAtEndPoint = true;
-	bool bDayHasStarted = false;
+	// Game State
+	class AHDGameStateBase* GSBase;
 };

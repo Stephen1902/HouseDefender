@@ -21,11 +21,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	FText WeaponName;
 
+	// Base damage per shot
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
-	float  DamagePerShot;
+	float DamagePerShot;
 
-	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
-	float HeadshotBonus;
+	// Damage multiplier when hitting an area of vulnerable skin ie headshot
+	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 1.0f), Category = "SetUp")
+	float VulnerableBonus;
+
+	// Damage penalty when hitting an area of armoured skin
+	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0.0f, ClampMax = 1.0f), Category = "SetUp")
+	float ArmourPenalty;
 
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	float FireRate;
