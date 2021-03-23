@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include <activation.h>
+
 #include "GameFramework/Character.h"
 #include "HDPlayerCharacter.generated.h"
 
@@ -20,6 +23,7 @@ enum class ECurrentWeapon : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, ECurrentWeapon, NewWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReload, float, ReloadTimeIn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoUpdated, FText, NewAmmoInClip, FText, NewAmmoAvailable);
 DECLARE_DELEGATE_OneParam(FKeyboardWeaponSelect, int32);
 
@@ -38,6 +42,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class UCameraComponent* CameraComp;
 
+	// Widget to show reload status
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Gameplay")
+	class UWidgetComponent* ReloadWidgetComp;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 	TArray<TSubclassOf<class AHDWeaponMaster>> CurrentWeapon;
 
@@ -52,6 +60,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
 	FOnAmmoUpdated OnAmmoUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
+	FOnReload OnReload;
 	
 protected:
 	void TryToFire();
@@ -76,8 +87,12 @@ private:
 	void CheckForLivingEnemies();
 	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
 	void WeaponSelected(int32 WeaponSelectedIn);
+	void ManualReload();
+	void BeginReload();
 	void Reload();
 	void UpdateAmmo();
+	void CheckCurrentGameState(float DeltaTime);
+	void CheckForReloadStatus();
 	
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
@@ -108,6 +123,10 @@ private:
 
 	// Current Enum Index
 	uint8 CurrentEnumIndex;
+
+	// Timer Handles
+	FTimerHandle ReloadTimer;
 };
+
 
 

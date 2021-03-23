@@ -27,6 +27,13 @@ AHDPlayerCharacter::AHDPlayerCharacter()
 	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComponent);
+
+	ReloadWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
+	ReloadWidgetComp->SetupAttachment(GetMesh());
+	ReloadWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	ReloadWidgetComp->SetDrawSize(FVector2D(64.f, 64.f));
+	ReloadWidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+	ReloadWidgetComp->SetHiddenInGame(true);
 }
 
 void AHDPlayerCharacter::TryToFire()
@@ -38,8 +45,8 @@ void AHDPlayerCharacter::TryToFire()
 		// Check enough time has passed since last firing against the weapon's fire rate
 		if (TimeLastFired < GetWorld()->GetTimeSeconds() - CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireRate)
 		{
-			// Check the weapon has ammo
-			if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip > 0)
+			// Check the weapon has ammo and they are not reloading
+			if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip > 0 && !GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
 			{
 				// Call the fire function
 				Fire();
@@ -49,7 +56,7 @@ void AHDPlayerCharacter::TryToFire()
 				// Check there is ammo available to reload into the gun
 				if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo > 0)
 				{
-					Reload();
+					BeginReload();
 				}
 			}
 		}
@@ -136,7 +143,7 @@ void AHDPlayerCharacter::BeginPlay()
 	
 	GetTargetPoints();
 	//SetDayStartCameraLocation();
-	WeaponSelected(0);
+	WeaponSelected(1);
 	UpdateAmmo();
 }
 
@@ -145,24 +152,9 @@ void AHDPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (GSBase)
-	{
-		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarting)
-		{
-			MovePlayerToDayStartPosition(DeltaTime);
-		}
-
-		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarted)
-		{
-			CheckForLivingEnemies();
-		}
-
-		if (GSBase->GetGameStatus() == EGameStatus::GS_DayEnding)
-		{
-			MovePlayerToDayEndPosition(DeltaTime);
-		}
-	}
-
+	CheckCurrentGameState(DeltaTime);
+	CheckForReloadStatus();
+	
 }
 
 // Called to bind functionality to input
@@ -173,6 +165,7 @@ void AHDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAxis("LookUp", this, &AHDPlayerCharacter::Look);
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHDPlayerCharacter::TryToFire);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AHDPlayerCharacter::ManualReload);
 	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot1", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 1);
 	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot2", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 2);
 	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot3", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 3);
@@ -325,6 +318,12 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 			WeaponToSpawn->Destroy();
 		}
 
+		// Check player wasn't mid reload when changing weapon, cancel reload if they were
+		if (GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
+		{
+			GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
+		}
+		
 		const FActorSpawnParameters SpawnParameters;
 		WeaponToSpawn = GetWorld()->SpawnActor<AHDWeaponMaster>(CurrentWeapon[WeaponSelectedIn], GetActorLocation(), GetActorRotation(), SpawnParameters);
 		const FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
@@ -353,14 +352,40 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 	}
 }
 
+void AHDPlayerCharacter::ManualReload()
+{
+	if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo > 0)
+	{
+		// Add bullets in clip to available bullets
+		CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo += CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip;
+	
+		// Empty the bullets in the clip
+		CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip = 0;
+
+		// Reload the weapon
+		BeginReload();
+	}
+}
+
+void AHDPlayerCharacter::BeginReload()
+{
+	// Prevent spamming of the reload key
+	if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
+	{
+		const float ReloadTimerTime = CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->ReloadTime;
+		
+		GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AHDPlayerCharacter::Reload, ReloadTimerTime, false);
+	}
+}
+
 void AHDPlayerCharacter::Reload()
 {
-	// TODO Add timer so reload takes time as per weapon 
 	const int32 AmmoToAmend = FMath::Min(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->MagazineSize, CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo);
 	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip += AmmoToAmend;
 	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo -= AmmoToAmend;
 
 	UpdateAmmo();
+	ReloadWidgetComp->SetHiddenInGame(true);
 }
 
 void AHDPlayerCharacter::UpdateAmmo()
@@ -375,4 +400,40 @@ void AHDPlayerCharacter::UpdateAmmo()
 	}
 
 	OnAmmoUpdated.Broadcast(NewAmmoInClip, NewAmmoAvailable);
+}
+
+void AHDPlayerCharacter::CheckCurrentGameState(float DeltaTime)
+{
+	if (GSBase)
+	{
+		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarting)
+		{
+			MovePlayerToDayStartPosition(DeltaTime);
+		}
+
+		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarted)
+		{
+			CheckForLivingEnemies();
+		}
+
+		if (GSBase->GetGameStatus() == EGameStatus::GS_DayEnding)
+		{
+			MovePlayerToDayEndPosition(DeltaTime);
+		}
+	}
+
+}
+
+void AHDPlayerCharacter::CheckForReloadStatus()
+{
+	if (GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
+	{
+		if (!ReloadWidgetComp->IsWidgetVisible())
+		{
+			ReloadWidgetComp->SetHiddenInGame(false);
+		}
+		
+		const float TimeRemainingAsPercentage = ((CurrentWeapon[CurrentEnumIndex].GetDefaultObject()->ReloadTime - GetWorld()->GetTimerManager().GetTimerRemaining(ReloadTimer)) / CurrentWeapon[CurrentEnumIndex].GetDefaultObject()->ReloadTime);
+		OnReload.Broadcast(TimeRemainingAsPercentage);
+	}
 }
