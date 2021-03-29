@@ -20,6 +20,7 @@ AHDWeaponMaster::AHDWeaponMaster()
 	FireDistance = 500.f;
 	MagazineSize = 20;
 	ReloadTime = 0.5f;
+	WeaponType = EWeaponType::CW_Pistol;
 }
 
 // Called when the game starts or when spawned

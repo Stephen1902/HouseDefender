@@ -5,7 +5,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "DrawDebugHelpers.h"
-#include "HDAIController.h"
 #include "HDEnemyMaster.h"
 #include "HDGameStateBase.h"
 #include "HDWeaponMaster.h"
@@ -14,6 +13,7 @@
 #include "Engine/TargetPoint.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/PlayerController.h"
 
 class AHDPlayerController;
 // Sets default values
@@ -40,13 +40,13 @@ void AHDPlayerCharacter::TryToFire()
 {
 
 	// Check if a valid weapon is available and that the day has started
-	if (CurrentWeapon.Num() > 0 && CurrentEnumIndex > 0)
+	if (CurrentWeapon.Num() > 0 && CurrentWeaponIndex > 0)
 	{
 		// Check enough time has passed since last firing against the weapon's fire rate
-		if (TimeLastFired < GetWorld()->GetTimeSeconds() - CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireRate)
+		if (TimeLastFired < GetWorld()->GetTimeSeconds() - WeaponInfoArray[CurrentWeaponIndex].FireRate)
 		{
 			// Check the weapon has ammo and they are not reloading
-			if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip > 0 && !GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
+			if (WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip > 0 && !GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
 			{
 				// Call the fire function
 				Fire();
@@ -54,7 +54,7 @@ void AHDPlayerCharacter::TryToFire()
 			else
 			{
 				// Check there is ammo available to reload into the gun
-				if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo > 0)
+				if (WeaponInfoArray[CurrentWeaponIndex].TotalAmmo > 0)
 				{
 					BeginReload();
 				}
@@ -67,13 +67,13 @@ void AHDPlayerCharacter::Fire()
 {
 	TimeLastFired = GetWorld()->GetTimeSeconds();
 
-	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip--;
+	WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip--;
 	UpdateAmmo();
 	
 	FHitResult HitResult;
 	const FVector StartLoc = GetMesh()->GetSocketLocation(FName("FiringSocket"));
 	
-	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * - CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->FireDistance) + StartLoc;
+	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * - WeaponInfoArray[CurrentWeaponIndex].FireDistance) + StartLoc;
 
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
@@ -100,14 +100,14 @@ void AHDPlayerCharacter::Fire()
 				DamageMultiplier = 1.f;
 				break;
 			case SURFACE_FleshVulnerable:
-				DamageMultiplier = CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->VulnerableBonus;
+				DamageMultiplier = WeaponInfoArray[CurrentWeaponIndex].VulnerableBonus;
 				break;
 			case SURFACE_FleshArmoured:
-				ArmourPenalty = CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->ArmourPenalty;
+				ArmourPenalty = WeaponInfoArray[CurrentWeaponIndex].ArmourPenalty;
 				break;
 			}
 
-			EnemyMaster->SetCurrentLife(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->DamagePerShot * DamageMultiplier * ArmourPenalty);			
+			EnemyMaster->SetCurrentLife(WeaponInfoArray[CurrentWeaponIndex].DamagePerShot * DamageMultiplier * ArmourPenalty);			
 		}
 	}
 }
@@ -120,12 +120,11 @@ void AHDPlayerCharacter::BeginPlay()
 	if (CurrentWeapon.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon not set in blueprint.  Game cannot proceed."));
-	}
-	else
-	{
-		
+		exit(0);
 	}
 
+	AddWeaponInfo();
+	
 	PC = Cast<APlayerController>(GetController());
 	GSBase = Cast<AHDGameStateBase>(GetWorld()->GetGameState());
 
@@ -166,9 +165,14 @@ void AHDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHDPlayerCharacter::TryToFire);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AHDPlayerCharacter::ManualReload);
-	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot1", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 1);
-	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot2", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 2);
-	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot3", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 3);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot1", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 0);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot2", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 1);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot3", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 2);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot4", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 3);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot5", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 4);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot6", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 5);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot7", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 6);
+	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot8", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 7);
 }
 
 void AHDPlayerCharacter::Look(float AxisValue)
@@ -311,7 +315,7 @@ void AHDPlayerCharacter::MoveCameraToNewLocation(AActor* ActorToMoveTo) const
 
 void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 {
-	if (CurrentEnumIndex != static_cast<uint8>(WeaponSelectedIn))
+	if (CurrentWeaponIndex != WeaponSelectedIn  && CurrentWeapon[WeaponSelectedIn])
 	{
 		if (WeaponToSpawn)
 		{
@@ -329,13 +333,13 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 		const FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
 		WeaponToSpawn->AttachToComponent(GetMesh(), TransformRules, FName("WeaponSocket"));
 
-		switch(WeaponSelectedIn)
+		const int32 WeaponToSwitchOn = static_cast<int32>(CurrentWeapon[WeaponSelectedIn]->GetDefaultObject<AHDWeaponMaster>()->WeaponType);
+		UE_LOG(LogTemp, Warning, TEXT("New Weapon selected is %i"), WeaponToSwitchOn);
+/**		switch(WeaponToSwitchOn)
 		{
 			case 0:
-			default:
-				CurrentPlayerWeapon = ECurrentWeapon::CW_None;
-				break;
 			case 1:
+			default:
 				CurrentPlayerWeapon = ECurrentWeapon::CW_Pistol;
 				break;
 			case 2:
@@ -345,8 +349,8 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 				CurrentPlayerWeapon = ECurrentWeapon::CW_Rifle;
 				break;
 		}
-		
-		CurrentEnumIndex = static_cast<uint8>(WeaponSelectedIn);
+*/		
+		CurrentWeaponIndex = WeaponSelectedIn;
 
 		UpdateAmmo();
 	}
@@ -354,13 +358,13 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 
 void AHDPlayerCharacter::ManualReload()
 {
-	if (CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo > 0)
+	if (WeaponInfoArray[CurrentWeaponIndex].TotalAmmo > 0)
 	{
 		// Add bullets in clip to available bullets
-		CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo += CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip;
+		WeaponInfoArray[CurrentWeaponIndex].TotalAmmo += WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip;
 	
 		// Empty the bullets in the clip
-		CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip = 0;
+		WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip = 0;
 
 		// Reload the weapon
 		BeginReload();
@@ -372,7 +376,7 @@ void AHDPlayerCharacter::BeginReload()
 	// Prevent spamming of the reload key
 	if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
 	{
-		const float ReloadTimerTime = CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->ReloadTime;
+		const float ReloadTimerTime = WeaponInfoArray[CurrentWeaponIndex].ReloadTime;
 		
 		GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &AHDPlayerCharacter::Reload, ReloadTimerTime, false);
 	}
@@ -380,9 +384,9 @@ void AHDPlayerCharacter::BeginReload()
 
 void AHDPlayerCharacter::Reload()
 {
-	const int32 AmmoToAmend = FMath::Min(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->MagazineSize, CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo);
-	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip += AmmoToAmend;
-	CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo -= AmmoToAmend;
+	const int32 AmmoToAmend = FMath::Min(WeaponInfoArray[CurrentWeaponIndex].MagazineSize, WeaponInfoArray[CurrentWeaponIndex].TotalAmmo);
+	WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip += AmmoToAmend;
+	WeaponInfoArray[CurrentWeaponIndex].TotalAmmo -= AmmoToAmend;
 
 	UpdateAmmo();
 	ReloadWidgetComp->SetHiddenInGame(true);
@@ -393,10 +397,10 @@ void AHDPlayerCharacter::UpdateAmmo()
 	FText NewAmmoInClip = FText::FromString(FString::FromInt(0));
 	FText NewAmmoAvailable = FText::FromString(FString::FromInt(0));
 	
-	if (CurrentEnumIndex > 0)
+	if (CurrentWeaponIndex > 0)
 	{
-		NewAmmoInClip = FText::FromString(FString::FromInt(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->CurrentAmmoInClip));
-		NewAmmoAvailable = FText::FromString(FString::FromInt(CurrentWeapon[CurrentEnumIndex]->GetDefaultObject<AHDWeaponMaster>()->TotalAmmo));
+		NewAmmoInClip = FText::FromString(FString::FromInt(WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip));
+		NewAmmoAvailable = FText::FromString(FString::FromInt(WeaponInfoArray[CurrentWeaponIndex].TotalAmmo));
 	}
 
 	OnAmmoUpdated.Broadcast(NewAmmoInClip, NewAmmoAvailable);
@@ -432,8 +436,35 @@ void AHDPlayerCharacter::CheckForReloadStatus()
 		{
 			ReloadWidgetComp->SetHiddenInGame(false);
 		}
-		
-		const float TimeRemainingAsPercentage = ((CurrentWeapon[CurrentEnumIndex].GetDefaultObject()->ReloadTime - GetWorld()->GetTimerManager().GetTimerRemaining(ReloadTimer)) / CurrentWeapon[CurrentEnumIndex].GetDefaultObject()->ReloadTime);
+
+		const float TimeRemainingAsPercentage = ((WeaponInfoArray[CurrentWeaponIndex].ReloadTime - GetWorld()->GetTimerManager().GetTimerRemaining(ReloadTimer)) / WeaponInfoArray[CurrentWeaponIndex].ReloadTime);
 		OnReload.Broadcast(TimeRemainingAsPercentage);
+	}
+}
+
+void AHDPlayerCharacter::AddWeaponInfo()
+{
+	// Safety check to ensure array is empty
+	WeaponInfoArray.Empty();
+	WeaponInfoArray.SetNum(CurrentWeapon.Num());
+		
+	for (int32 i = 0; i < CurrentWeapon.Num(); ++i)
+	{
+		// Check that the current weapon slot isn't set to "None"
+		if (CurrentWeapon[i] != nullptr)
+		{
+			CurrentWeaponIndex = i;
+			WeaponInfoArray[i].WeaponName =	CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->WeaponName;
+			WeaponInfoArray[i].DamagePerShot = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->DamagePerShot;
+			WeaponInfoArray[i].VulnerableBonus = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->VulnerableBonus;
+			WeaponInfoArray[i].ArmourPenalty = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->ArmourPenalty;
+			WeaponInfoArray[i].FireRate = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->FireRate;
+			WeaponInfoArray[i].FireDistance = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->FireDistance;
+			WeaponInfoArray[i].MagazineSize = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->MagazineSize;
+			WeaponInfoArray[i].TotalAmmo = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->TotalAmmo;
+			WeaponInfoArray[i].CurrentAmmoInClip = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->CurrentAmmoInClip;
+			WeaponInfoArray[i].ReloadTime = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->ReloadTime;
+			WeaponInfoArray[i].WeaponType = static_cast<int>(CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
+		}
 	}
 }

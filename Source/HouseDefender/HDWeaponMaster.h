@@ -6,6 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "HDWeaponMaster.generated.h"
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+    CW_Pistol		UMETA(DisplayName = "Pistol"),
+    CW_Shotgun		UMETA(DisplayName = "Shotgun"),
+    CW_Rifle		UMETA(DisplayName = "Rifle")
+};
+
 UCLASS()
 class HOUSEDEFENDER_API AHDWeaponMaster : public AActor
 {
@@ -51,14 +59,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	int32 CurrentAmmoInClip;
 
+	// Time in seconds the weapon takes to reload
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	float ReloadTime;
-	
+
+	// The type of weapon for the animation
+	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
+	EWeaponType WeaponType;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
 	
 public:	
 	// Called every frame

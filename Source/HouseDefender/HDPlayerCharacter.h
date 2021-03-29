@@ -13,16 +13,62 @@
 #define SURFACE_FleshVulnerable		SurfaceType2
 #define SURFACE_FleshArmoured		SurfaceType3
 
-UENUM(BlueprintType)
-enum class ECurrentWeapon : uint8
+USTRUCT(BlueprintType)
+struct FWeaponInfo
 {
-	CW_None			UMETA(DisplayName = "No Weapon"),
-	CW_Pistol		UMETA(DisplayName = "Pistol"),
-	CW_Shotgun		UMETA(DisplayName = "Shotgun"),
-	CW_Rifle		UMETA(DisplayName = "Rifle")
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FText WeaponName;
+	
+	UPROPERTY()
+	float DamagePerShot;
+
+	UPROPERTY()
+	float VulnerableBonus;
+
+	UPROPERTY()
+	float ArmourPenalty;
+
+	UPROPERTY()
+	float FireRate;
+
+	UPROPERTY()
+	float FireDistance;
+
+	UPROPERTY()
+	int32 MagazineSize;
+
+	UPROPERTY()
+	int32 TotalAmmo;
+
+	UPROPERTY()
+	int32 CurrentAmmoInClip;
+
+	UPROPERTY()
+	float ReloadTime;
+
+	UPROPERTY()
+	int32 WeaponType;
+
+	FWeaponInfo()
+	{
+		WeaponName = FText::FromString(TEXT(""));
+		DamagePerShot = 0.0f;
+		VulnerableBonus = 0.0f;
+		ArmourPenalty = 0.0f;
+		FireRate = 0.0f;
+		FireDistance = 0.0f;
+		MagazineSize = 0;
+		TotalAmmo = 0;
+		CurrentAmmoInClip = 0;
+		ReloadTime = 0.0f;
+		WeaponType = 1;
+	}
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, ECurrentWeapon, NewWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, int32, NewWeaponValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReload, float, ReloadTimeIn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoUpdated, FText, NewAmmoInClip, FText, NewAmmoAvailable);
 DECLARE_DELEGATE_OneParam(FKeyboardWeaponSelect, int32);
@@ -52,11 +98,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
 	float GetCurrentRotation() const { return CurrentRotation; }
 
-	UPROPERTY(EditAnywhere, Category = "Character Weapon")
-	ECurrentWeapon CurrentPlayerWeapon;
-
 	UFUNCTION(BlueprintCallable, Category = "Character Weapon")
-	ECurrentWeapon GetCurrentPlayerWeapon() { return CurrentPlayerWeapon; }
+	int32 GetCurrentWeaponIndex() { return CurrentWeaponIndex; }
 
 	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
 	FOnAmmoUpdated OnAmmoUpdated;
@@ -93,6 +136,7 @@ private:
 	void UpdateAmmo();
 	void CheckCurrentGameState(float DeltaTime);
 	void CheckForReloadStatus();
+	void AddWeaponInfo();
 	
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
@@ -122,10 +166,16 @@ private:
 	AHDWeaponMaster* WeaponToSpawn = nullptr;
 
 	// Current Enum Index
-	uint8 CurrentEnumIndex;
+	int32 CurrentWeaponIndex;
 
 	// Timer Handles
 	FTimerHandle ReloadTimer;
+
+	// Weapon struct
+	FWeaponInfo WeaponInfoStruct;
+	
+	// Array of all weapons for the player
+	TArray<FWeaponInfo> WeaponInfoArray;
 };
 
 
