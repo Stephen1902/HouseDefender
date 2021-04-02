@@ -93,14 +93,17 @@ public:
 	class UWidgetComponent* ReloadWidgetComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
-	TArray<TSubclassOf<class AHDWeaponMaster>> CurrentWeapon;
+	TArray<TSubclassOf<class AHDWeaponMaster>> WeaponList;
 
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
 	float GetCurrentRotation() const { return CurrentRotation; }
 
 	UFUNCTION(BlueprintCallable, Category = "Character Weapon")
-	int32 GetCurrentWeaponIndex() { return CurrentWeaponIndex; }
+	int32 GetCurrentWeaponIndex() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Character Weapon")
+	TArray<TSubclassOf<class AHDWeaponMaster>> GetAvailableWeapons() const { return WeaponList; }
+	
 	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
 	FOnAmmoUpdated OnAmmoUpdated;
 

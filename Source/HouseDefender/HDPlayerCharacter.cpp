@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
 
 class AHDPlayerController;
 // Sets default values
@@ -36,11 +37,16 @@ AHDPlayerCharacter::AHDPlayerCharacter()
 	ReloadWidgetComp->SetHiddenInGame(true);
 }
 
+int32 AHDPlayerCharacter::GetCurrentWeaponIndex() const
+{
+	return WeaponInfoArray[CurrentWeaponIndex].WeaponType;
+}
+
 void AHDPlayerCharacter::TryToFire()
 {
 
 	// Check if a valid weapon is available and that the day has started
-	if (CurrentWeapon.Num() > 0 && CurrentWeaponIndex > 0)
+	if (WeaponList.Num() > 0 &&  UKismetMathLibrary::InRange_IntInt(CurrentWeaponIndex, 0, WeaponList.Num() - 1))
 	{
 		// Check enough time has passed since last firing against the weapon's fire rate
 		if (TimeLastFired < GetWorld()->GetTimeSeconds() - WeaponInfoArray[CurrentWeaponIndex].FireRate)
@@ -117,10 +123,9 @@ void AHDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (CurrentWeapon.Num() == 0)
+	if (WeaponList.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Weapon not set in blueprint.  Game cannot proceed."));
-		exit(0);
 	}
 
 	AddWeaponInfo();
@@ -142,8 +147,6 @@ void AHDPlayerCharacter::BeginPlay()
 	
 	GetTargetPoints();
 	//SetDayStartCameraLocation();
-	WeaponSelected(1);
-	UpdateAmmo();
 }
 
 // Called every frame
@@ -265,6 +268,8 @@ void AHDPlayerCharacter::MovePlayerToDayStartPosition(float DeltaTime)
 		{
 			SetDayStartCameraLocation();		
 			GSBase->SetGameStatus(EGameStatus::GS_DayStarted);
+			// TODO Update to restart day with weapon ended the day on
+			WeaponSelected(0);
 		}
 	}
 }
@@ -315,7 +320,7 @@ void AHDPlayerCharacter::MoveCameraToNewLocation(AActor* ActorToMoveTo) const
 
 void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 {
-	if (CurrentWeaponIndex != WeaponSelectedIn  && CurrentWeapon[WeaponSelectedIn])
+	if (CurrentWeaponIndex != WeaponSelectedIn  && WeaponList[WeaponSelectedIn])
 	{
 		if (WeaponToSpawn)
 		{
@@ -327,29 +332,22 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
 		}
-		
-		const FActorSpawnParameters SpawnParameters;
-		WeaponToSpawn = GetWorld()->SpawnActor<AHDWeaponMaster>(CurrentWeapon[WeaponSelectedIn], GetActorLocation(), GetActorRotation(), SpawnParameters);
-		const FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
-		WeaponToSpawn->AttachToComponent(GetMesh(), TransformRules, FName("WeaponSocket"));
 
-		const int32 WeaponToSwitchOn = static_cast<int32>(CurrentWeapon[WeaponSelectedIn]->GetDefaultObject<AHDWeaponMaster>()->WeaponType);
-		UE_LOG(LogTemp, Warning, TEXT("New Weapon selected is %i"), WeaponToSwitchOn);
-/**		switch(WeaponToSwitchOn)
+		const FActorSpawnParameters SpawnParameters;
+		WeaponToSpawn = GetWorld()->SpawnActor<AHDWeaponMaster>(WeaponList[WeaponSelectedIn], GetActorLocation(), GetActorRotation(), SpawnParameters);
+		const FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true);
+
+		FName SocketToAttachTo = FName("WeaponSocket");
+		if (WeaponList[WeaponSelectedIn].GetDefaultObject()->WeaponType == EWeaponType::CW_Pistol)
 		{
-			case 0:
-			case 1:
-			default:
-				CurrentPlayerWeapon = ECurrentWeapon::CW_Pistol;
-				break;
-			case 2:
-				CurrentPlayerWeapon = ECurrentWeapon::CW_Shotgun;
-				break;
-			case 3:
-				CurrentPlayerWeapon = ECurrentWeapon::CW_Rifle;
-				break;
+			SocketToAttachTo = FName("PistolSocket");	
 		}
-*/		
+		WeaponToSpawn->AttachToComponent(GetMesh(), TransformRules, SocketToAttachTo);
+
+		const FString EnumAsString = UEnum::GetValueAsString(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
+		//const int32 WeaponToSwitchOn = WeaponInfoArray[WeaponSelectedIn].WeaponType;
+		UE_LOG(LogTemp, Warning, TEXT("New Weapon selected is %s"), *EnumAsString);
+
 		CurrentWeaponIndex = WeaponSelectedIn;
 
 		UpdateAmmo();
@@ -397,7 +395,7 @@ void AHDPlayerCharacter::UpdateAmmo()
 	FText NewAmmoInClip = FText::FromString(FString::FromInt(0));
 	FText NewAmmoAvailable = FText::FromString(FString::FromInt(0));
 	
-	if (CurrentWeaponIndex > 0)
+	if (UKismetMathLibrary::InRange_IntInt(CurrentWeaponIndex, 0, WeaponList.Num() - 1))
 	{
 		NewAmmoInClip = FText::FromString(FString::FromInt(WeaponInfoArray[CurrentWeaponIndex].CurrentAmmoInClip));
 		NewAmmoAvailable = FText::FromString(FString::FromInt(WeaponInfoArray[CurrentWeaponIndex].TotalAmmo));
@@ -446,25 +444,28 @@ void AHDPlayerCharacter::AddWeaponInfo()
 {
 	// Safety check to ensure array is empty
 	WeaponInfoArray.Empty();
-	WeaponInfoArray.SetNum(CurrentWeapon.Num());
+	WeaponInfoArray.SetNum(WeaponList.Num());
 		
-	for (int32 i = 0; i < CurrentWeapon.Num(); ++i)
+	for (int32 i = 0; i < WeaponList.Num(); ++i)
 	{
 		// Check that the current weapon slot isn't set to "None"
-		if (CurrentWeapon[i] != nullptr)
+		if (WeaponList[i] != nullptr)
 		{
 			CurrentWeaponIndex = i;
-			WeaponInfoArray[i].WeaponName =	CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->WeaponName;
-			WeaponInfoArray[i].DamagePerShot = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->DamagePerShot;
-			WeaponInfoArray[i].VulnerableBonus = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->VulnerableBonus;
-			WeaponInfoArray[i].ArmourPenalty = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->ArmourPenalty;
-			WeaponInfoArray[i].FireRate = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->FireRate;
-			WeaponInfoArray[i].FireDistance = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->FireDistance;
-			WeaponInfoArray[i].MagazineSize = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->MagazineSize;
-			WeaponInfoArray[i].TotalAmmo = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->TotalAmmo;
-			WeaponInfoArray[i].CurrentAmmoInClip = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->CurrentAmmoInClip;
-			WeaponInfoArray[i].ReloadTime = CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->ReloadTime;
-			WeaponInfoArray[i].WeaponType = static_cast<int>(CurrentWeapon[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
+			WeaponInfoArray[i].WeaponName =	WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponName;
+			WeaponInfoArray[i].DamagePerShot = WeaponList[CurrentWeaponIndex].GetDefaultObject()->DamagePerShot;
+			WeaponInfoArray[i].VulnerableBonus = WeaponList[CurrentWeaponIndex].GetDefaultObject()->VulnerableBonus;
+			WeaponInfoArray[i].ArmourPenalty = WeaponList[CurrentWeaponIndex].GetDefaultObject()->ArmourPenalty;
+			WeaponInfoArray[i].FireRate = WeaponList[CurrentWeaponIndex].GetDefaultObject()->FireRate;
+			WeaponInfoArray[i].FireDistance = WeaponList[CurrentWeaponIndex].GetDefaultObject()->FireDistance;
+			WeaponInfoArray[i].MagazineSize = WeaponList[CurrentWeaponIndex].GetDefaultObject()->MagazineSize;
+			WeaponInfoArray[i].TotalAmmo = WeaponList[CurrentWeaponIndex].GetDefaultObject()->TotalAmmo;
+			WeaponInfoArray[i].CurrentAmmoInClip = WeaponList[CurrentWeaponIndex].GetDefaultObject()->CurrentAmmoInClip;
+			WeaponInfoArray[i].ReloadTime = WeaponList[CurrentWeaponIndex].GetDefaultObject()->ReloadTime;
+			WeaponInfoArray[i].WeaponType = static_cast<int>(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
+
+			const FString CurrentWeaponAsText = UEnum::GetValueAsString(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
+			UE_LOG(LogTemp, Warning, TEXT("Weapon Type at slot %i is %s"), WeaponInfoArray[i].WeaponType, *CurrentWeaponAsText);
 		}
 	}
 }
