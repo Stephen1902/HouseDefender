@@ -6,22 +6,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e946507d-a1b7-4d22-a065-ea551f1b6095" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/BP_Pistol.uasset" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/SK_Pistol.uasset" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/SK_Pistol_Skeleton.uasset" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/Widgets/WBP_WeaponToolbar.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/AimCentre.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/AimCentre.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/AimDown.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/AimDown.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/AimUp.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/AimUp.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/BS_Aiming.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Animations/BS_Aiming.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/BP_Player.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/BP_Player.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/BP_Rifle.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/BP_Rifle.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/BP_UMP45.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/BP_UMP45.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/Mesh/UMP45_Skeleton.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/Mesh/UMP45_Skeleton.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Widgets/WBP_DayStarted.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Widgets/WBP_DayStarted.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Apocalypse_Girl/Mesh/SK_Apocalypse_Girl_Body_Skeleton.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Apocalypse_Girl/Mesh/SK_Apocalypse_Girl_Body_Skeleton.uasset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -513,7 +499,7 @@
       <workItem from="1617032773383" duration="4488000" />
       <workItem from="1617044494349" duration="4282000" />
       <workItem from="1617115316511" duration="2799000" />
-      <workItem from="1617277415356" duration="8374000" />
+      <workItem from="1617277415356" duration="8399000" />
     </task>
     <servers />
   </component>

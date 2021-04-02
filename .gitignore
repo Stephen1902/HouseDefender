@@ -78,7 +78,10 @@ Plugins/*/Intermediate/*
 DerivedDataCache/*
 
 # Content downloaded from the Epic Marketplace
-Content/IndustryPropsPack6/
-Content/VehicleVarietyPack/
-
-Content/Mannequin/
+Content/IndustryPropsPack6/*
+Content/VehicleVarietyPack/*
+Content/Apocalypse_Girl/*
+Content/DarkForest/*
+Content/Polygonmaker/*
+Content/RoboBars/*
+Content/Mannequin/*
