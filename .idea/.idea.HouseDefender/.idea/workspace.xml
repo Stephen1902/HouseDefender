@@ -6,29 +6,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e946507d-a1b7-4d22-a065-ea551f1b6095" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Content/Blueprints/Player/BP_FemalePlayer.uasset" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Content/MyMeshes/WallLamp.uasset" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/HouseDefender/HDInteractableMaster.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Source/HouseDefender/HDInteractableMaster.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/indexLayout.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/indexLayout.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultEngine.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultEngine.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Config/DefaultInput.ini" beforeDir="false" afterPath="$PROJECT_DIR$/Config/DefaultInput.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Apocalypse_Girl/Mesh/SK_Apocalypse_Girl_Body.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Apocalypse_Girl/Mesh/SK_Apocalypse_Girl_Body.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Apocalypse_Girl/Mesh/SK_Apocalypse_Girl_Body_Skeleton.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Apocalypse_Girl/Mesh/SK_Apocalypse_Girl_Body_Skeleton.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Enemies/BPDefaultEnemy.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Enemies/BPDefaultEnemy.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/BP_Player.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/BP_Player.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/SK_Pistol.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/SK_Pistol.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/SK_Pistol_Skeleton.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Pistol/SK_Pistol_Skeleton.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/SK_Rifle.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/SK_Rifle.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/Mesh/SK_UMP45.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/Mesh/SK_UMP45.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/SK_Rifle_Skeleton.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/Rifle/SK_Rifle_Skeleton.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/Mesh/UMP45_Skeleton.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Weapons/UMP45/Mesh/UMP45_Skeleton.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/RoboBars/Materials/ExamplesUmg/MI_UmgProgressHealth.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/RoboBars/Materials/ExamplesUmg/MI_UmgProgressHealth.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Widgets/WBP_DayStarted.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Widgets/WBP_DayStarted.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -531,11 +511,22 @@
       <workItem from="1619376626221" duration="8093000" />
       <workItem from="1619460332372" duration="942000" />
       <workItem from="1619461345539" duration="32000" />
-      <workItem from="1619461422872" duration="3298000" />
+      <workItem from="1619461422872" duration="3626000" />
     </task>
+    <task id="LOCAL-00001" summary="Added code to make the game 3D but decided to revert to 2D game space.&#10;&#10;Corrected weapon meshes to fire in correct direction.">
+      <created>1619465003036</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1619465003036</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_NEW_TODO" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="Added code to make the game 3D but decided to revert to 2D game space.&#10;&#10;Corrected weapon meshes to fire in correct direction." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added code to make the game 3D but decided to revert to 2D game space.&#10;&#10;Corrected weapon meshes to fire in correct direction." />
   </component>
 </project>
