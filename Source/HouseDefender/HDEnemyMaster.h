@@ -86,6 +86,7 @@ private:
 
 	void MoveTowardsPlayer(float DeltaTime);
 
+	AActor* StairsToReach;
 	class AHDPlayerCharacter* PlayerCharacter;
 
 	void GetPlayerCharacter();

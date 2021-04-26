@@ -88,6 +88,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class UCameraComponent* CameraComp;
 
+	UPROPERTY(VisibleAnywhere, Category = "Camera")
+	class USpringArmComponent* GamePlaySpringArmComponent;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Camera")
+	class UCameraComponent* GamePlayCameraComp;
+	
 	// Widget to show reload status
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Gameplay")
 	class UWidgetComponent* ReloadWidgetComp;
@@ -125,12 +131,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	void Look(float AxisValue);
+	void LookUp(float AxisValue);
+	void LookRight(float AxisValue);
 	void GetTargetPoints();
 	void SetDayStartCameraLocation();
 	void MovePlayerToDayStartPosition(float DeltaTime);
 	void MovePlayerToDayEndPosition(float DeltaTime);
-	void CheckForLivingEnemies();
+	void CheckForLivingEnemies() const;
 	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
 	void WeaponSelected(int32 WeaponSelectedIn);
 	void ManualReload();
@@ -152,20 +159,30 @@ private:
 	float MouseY;
 
 	// Target points for the player to move to at the start / end of the day
+	UPROPERTY()
 	class ATargetPoint* TPDayStart;
+	
+	UPROPERTY()
 	class ATargetPoint* TPDayEnd;
+
+	UPROPERTY()
 	class ATargetPoint* TPEnemySpawn;
+
+	UPROPERTY()
 	class AActor* DayViewLocation;
 
 	float MidPointBetweenDayStartAndEnemySpawn = 0.f;
 
 	// Player Controller
+	UPROPERTY()
 	class APlayerController* PC;
 
 	// Game State
+	UPROPERTY()
 	class AHDGameStateBase* GSBase;
 
 	// Current game weapon
+	UPROPERTY()
 	AHDWeaponMaster* WeaponToSpawn = nullptr;
 
 	// Current Enum Index

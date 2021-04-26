@@ -4,9 +4,11 @@
 #include "HDEnemyMaster.h"
 #include "TimerManager.h"
 #include "HDAIController.h"
+#include "HDInteractableMaster.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AHDEnemyMaster::AHDEnemyMaster()
@@ -52,7 +54,10 @@ void AHDEnemyMaster::BeginPlay()
 	WidgetComp->SetVisibility(false);
 	
 	GetPlayerCharacter();
-	
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHDInteractableMaster::StaticClass(), FoundActors);
+	// TODO Set up stairs and code what happens when enemy collides with them
 }
 
 // Called every frame
@@ -73,7 +78,7 @@ void AHDEnemyMaster::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AHDEnemyMaster::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap begun"));
+	UE_LOG(LogTemp, Warning, TEXT("Overlap begun %s"), *OtherActor->GetName());
 }
 
 void AHDEnemyMaster::OnEndOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex)

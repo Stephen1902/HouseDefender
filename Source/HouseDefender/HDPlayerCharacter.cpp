@@ -16,18 +16,31 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
 
-class AHDPlayerController;
 // Sets default values
 AHDPlayerCharacter::AHDPlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
-	SpringArmComponent->SetupAttachment(GetMesh());
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -88.f));
+	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));	
 	
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("Day End Spring Arm"));
+	SpringArmComponent->SetupAttachment(GetMesh());
+	SpringArmComponent->TargetArmLength = 100.f;
+	SpringArmComponent->SetRelativeLocation(FVector(20.f, 0.f, 154.f));
+	SpringArmComponent->SetRelativeRotation(FRotator(-20.f, 90.f, 0.f));
+	
+	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Day End Camera"));
 	CameraComp->SetupAttachment(SpringArmComponent);
+
+	GamePlaySpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("Gameplay Spring Arm"));
+	GamePlaySpringArmComponent->SetupAttachment(GetMesh());
+	GamePlaySpringArmComponent->SetRelativeLocation(FVector(0.f, 36.f, 164.f));
+	GamePlaySpringArmComponent->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	
+	GamePlayCameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("GamePlayCamera"));
+	GamePlayCameraComp->SetupAttachment(GamePlaySpringArmComponent);
 
 	ReloadWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	ReloadWidgetComp->SetupAttachment(GetMesh());
@@ -44,9 +57,8 @@ int32 AHDPlayerCharacter::GetCurrentWeaponIndex() const
 
 void AHDPlayerCharacter::TryToFire()
 {
-
 	// Check if a valid weapon is available and that the day has started
-	if (WeaponList.Num() > 0 &&  UKismetMathLibrary::InRange_IntInt(CurrentWeaponIndex, 0, WeaponList.Num() - 1))
+	if (WeaponList.Num() > 0 &&  UKismetMathLibrary::InRange_IntInt(CurrentWeaponIndex, 0, WeaponList.Num() - 1) && GSBase->GetGameStatus() == EGameStatus::GS_DayStarted)
 	{
 		// Check enough time has passed since last firing against the weapon's fire rate
 		if (TimeLastFired < GetWorld()->GetTimeSeconds() - WeaponInfoArray[CurrentWeaponIndex].FireRate)
@@ -77,10 +89,10 @@ void AHDPlayerCharacter::Fire()
 	UpdateAmmo();
 	
 	FHitResult HitResult;
-	const FVector StartLoc = GetMesh()->GetSocketLocation(FName("FiringSocket"));
+	//const FVector StartLoc = GetMesh()->GetSocketLocation(FName("FiringSocket"));
+	const FVector StartLoc = WeaponToSpawn->MeshComponent->GetSocketLocation(FName("FiringSocket"));
+	FVector EndLoc = (WeaponToSpawn->MeshComponent->GetSocketRotation(FName("FiringSocket")).Vector() * - WeaponInfoArray[CurrentWeaponIndex].FireDistance) + StartLoc;
 	
-	FVector EndLoc = (GetMesh()->GetSocketRotation(FName("FiringSocket")).Vector() * - WeaponInfoArray[CurrentWeaponIndex].FireDistance) + StartLoc;
-
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 	CollisionParams.bReturnPhysicalMaterial = true;
@@ -123,11 +135,6 @@ void AHDPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (WeaponList.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Weapon not set in blueprint.  Game cannot proceed."));
-	}
-
 	AddWeaponInfo();
 	
 	PC = Cast<APlayerController>(GetController());
@@ -164,7 +171,8 @@ void AHDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("LookUp", this, &AHDPlayerCharacter::Look);
+	PlayerInputComponent->BindAxis("LookUp", this, &AHDPlayerCharacter::LookUp);
+//	PlayerInputComponent->BindAxis("LookRight", this, &AHDPlayerCharacter::LookRight);
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHDPlayerCharacter::TryToFire);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AHDPlayerCharacter::ManualReload);
@@ -178,12 +186,12 @@ void AHDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot8", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 7);
 }
 
-void AHDPlayerCharacter::Look(float AxisValue)
+void AHDPlayerCharacter::LookUp(float AxisValue)
 {
 	// Safety check to ensure we have a valid controller to use
 	if (!PC) { return; }
 
-	//	if (AxisValue != 0.f)
+		if (AxisValue != 0.f)
 	{
 		// Gets the current world location of the firing socket 
 		FVector2D WeaponSocketLocation;
@@ -192,7 +200,40 @@ void AHDPlayerCharacter::Look(float AxisValue)
 		PC->GetMousePosition(MouseX, MouseY);
 		// Set current rotation for animation
 		CurrentRotation = FMath::Clamp(1 - (MouseY / WeaponSocketLocation.Y), -0.5f, 0.5f);
+
+		//AddControllerPitchInput(-AxisValue);
+/**		FHitResult Hit;
+		PC->GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+		
+		if (Hit.IsValidBlockingHit())
+		{
+			const FVector HitLocation = Hit.Location;
+			const FVector CurrentActorLocation = GetActorLocation();
+			const FRotator NewRotation = UKismetMathLibrary::FindLookAtRotation(CurrentActorLocation, HitLocation);
+			//SetActorRotation(FRotator(0.f, 0.f, NewRotation.Roll));
+			PC->SetControlRotation(FRotator(0.f, 0.f, NewRotation.Roll));
+		}*/
 	}
+}
+
+void AHDPlayerCharacter::LookRight(float AxisValue)
+{
+	if (!PC) { return; }
+
+	if (AxisValue != 0.f)
+	{
+		// Gets the current world location of the firing socket 
+		FVector2D WeaponSocketLocation;
+		PC->ProjectWorldLocationToScreen(GetMesh()->GetSocketLocation(FName("FiringSocket")),WeaponSocketLocation);
+		// Check mouse position on screen
+		PC->GetMousePosition(MouseX, MouseY);
+		// Set current rotation for animation
+	// TODO Sort animation into 3D world space
+	//	CurrentRotation = FMath::Clamp(1 - (MouseY / WeaponSocketLocation.Y), -0.5f, 0.5f);
+
+		AddControllerYawInput(AxisValue);
+	}
+	
 }
 
 void AHDPlayerCharacter::GetTargetPoints()
@@ -235,6 +276,7 @@ void AHDPlayerCharacter::GetTargetPoints()
 
 void AHDPlayerCharacter::SetDayStartCameraLocation()
 {
+	// This will give a "side on" view to give the player a 2D perspective of incoming enemies
 	FVector CurrentCameraLocation = DayViewLocation->GetActorLocation();
 
 	// Get the midway point between the player location at day start and enemy spawn point
@@ -266,8 +308,11 @@ void AHDPlayerCharacter::MovePlayerToDayStartPosition(float DeltaTime)
 	{
 		if (GSBase->GameStatus != EGameStatus::GS_DayStarted)
 		{
-			SetDayStartCameraLocation();		
+			SetDayStartCameraLocation();
+			
 			GSBase->SetGameStatus(EGameStatus::GS_DayStarted);
+			//GamePlayCameraComp->SetActive(true);
+			//CameraComp->SetActive(false);
 			// TODO Update to restart day with weapon ended the day on
 			WeaponSelected(0);
 		}
@@ -297,7 +342,7 @@ void AHDPlayerCharacter::MovePlayerToDayEndPosition(float DeltaTime)
 	}
 }
 
-void AHDPlayerCharacter::CheckForLivingEnemies()
+void AHDPlayerCharacter::CheckForLivingEnemies() const
 {
 	if (GSBase->GameStatus == EGameStatus::GS_DayStarted)
 	{
@@ -306,7 +351,9 @@ void AHDPlayerCharacter::CheckForLivingEnemies()
 
 		if (FoundEnemies.Num() == 0)
 		{
-			MoveCameraToNewLocation(this);
+			//GamePlayCameraComp->SetActive(false);
+			//CameraComp->SetActive(true);
+			MoveCameraToNewLocation(GetWorld()->GetFirstPlayerController()->GetPawn());
 			GSBase->SetGameStatus(EGameStatus::GS_DayEnding);
 		}
 	}
@@ -346,7 +393,7 @@ void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 
 		const FString EnumAsString = UEnum::GetValueAsString(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
 		//const int32 WeaponToSwitchOn = WeaponInfoArray[WeaponSelectedIn].WeaponType;
-		UE_LOG(LogTemp, Warning, TEXT("New Weapon selected is %s"), *EnumAsString);
+//		UE_LOG(LogTemp, Warning, TEXT("New Weapon selected is %s"), *EnumAsString);
 
 		CurrentWeaponIndex = WeaponSelectedIn;
 
@@ -465,7 +512,7 @@ void AHDPlayerCharacter::AddWeaponInfo()
 			WeaponInfoArray[i].WeaponType = static_cast<int>(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
 
 			const FString CurrentWeaponAsText = UEnum::GetValueAsString(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
-			UE_LOG(LogTemp, Warning, TEXT("Weapon Type at slot %i is %s"), WeaponInfoArray[i].WeaponType, *CurrentWeaponAsText);
+			//UE_LOG(LogTemp, Warning, TEXT("Weapon Type at slot %i is %s"), WeaponInfoArray[i].WeaponType, *CurrentWeaponAsText);
 		}
 	}
 }
