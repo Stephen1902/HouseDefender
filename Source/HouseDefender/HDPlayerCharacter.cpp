@@ -7,6 +7,7 @@
 #include "DrawDebugHelpers.h"
 #include "HDEnemyMaster.h"
 #include "HDGameStateBase.h"
+#include "HDInventoryComponent.h"
 #include "HDWeaponMaster.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
@@ -15,6 +16,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "HDDrops.h"
 
 // Sets default values
 AHDPlayerCharacter::AHDPlayerCharacter()
@@ -42,12 +44,16 @@ AHDPlayerCharacter::AHDPlayerCharacter()
 	GamePlayCameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("GamePlayCamera"));
 	GamePlayCameraComp->SetupAttachment(GamePlaySpringArmComponent);
 
+	PlayerInventory = CreateDefaultSubobject<UHDInventoryComponent>(TEXT("Inventory Component"));
+	
 	ReloadWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	ReloadWidgetComp->SetupAttachment(GetMesh());
 	ReloadWidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
 	ReloadWidgetComp->SetDrawSize(FVector2D(64.f, 64.f));
 	ReloadWidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
 	ReloadWidgetComp->SetHiddenInGame(true);
+
+	EndOfDayWeaponIndex = -1;
 }
 
 int32 AHDPlayerCharacter::GetCurrentWeaponIndex() const
@@ -313,8 +319,15 @@ void AHDPlayerCharacter::MovePlayerToDayStartPosition(float DeltaTime)
 			GSBase->SetGameStatus(EGameStatus::GS_DayStarted);
 			//GamePlayCameraComp->SetActive(true);
 			//CameraComp->SetActive(false);
-			// TODO Update to restart day with weapon ended the day on
-			WeaponSelected(0);
+
+			if (EndOfDayWeaponIndex > -1)
+			{
+				WeaponSelected(EndOfDayWeaponIndex);
+			}
+			else
+			{
+				WeaponSelected(0);
+			}
 		}
 	}
 }
@@ -336,8 +349,14 @@ void AHDPlayerCharacter::MovePlayerToDayEndPosition(float DeltaTime)
 	{
 		if (GSBase->GameStatus != EGameStatus::GS_Idle)
 		{
+			PC->SetShowMouseCursor(true);
 			GetMesh()->SetRelativeRotation(FRotator(0.f, -270.f, 0.f));
 			GSBase->SetGameStatus(EGameStatus::GS_Idle);
+
+			if (WeaponToSpawn)
+			{
+				WeaponToSpawn->Destroy();
+			}
 		}
 	}
 }
@@ -367,7 +386,7 @@ void AHDPlayerCharacter::MoveCameraToNewLocation(AActor* ActorToMoveTo) const
 
 void AHDPlayerCharacter::WeaponSelected(int32 WeaponSelectedIn)
 {
-	if (CurrentWeaponIndex != WeaponSelectedIn  && WeaponList[WeaponSelectedIn])
+	if (CurrentWeaponIndex != WeaponSelectedIn && WeaponList[WeaponSelectedIn] && WeaponInfoArray[WeaponSelectedIn].bPlayerHasThisWeapon)
 	{
 		if (WeaponToSpawn)
 		{
@@ -510,6 +529,7 @@ void AHDPlayerCharacter::AddWeaponInfo()
 			WeaponInfoArray[i].CurrentAmmoInClip = WeaponList[CurrentWeaponIndex].GetDefaultObject()->CurrentAmmoInClip;
 			WeaponInfoArray[i].ReloadTime = WeaponList[CurrentWeaponIndex].GetDefaultObject()->ReloadTime;
 			WeaponInfoArray[i].WeaponType = static_cast<int>(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
+			WeaponInfoArray[i].bPlayerHasThisWeapon = WeaponList[CurrentWeaponIndex].GetDefaultObject()->bPlayerHasThisWeapon;
 
 			const FString CurrentWeaponAsText = UEnum::GetValueAsString(WeaponList[CurrentWeaponIndex].GetDefaultObject()->WeaponType);
 			//UE_LOG(LogTemp, Warning, TEXT("Weapon Type at slot %i is %s"), WeaponInfoArray[i].WeaponType, *CurrentWeaponAsText);

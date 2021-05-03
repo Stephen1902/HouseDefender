@@ -21,6 +21,7 @@ AHDWeaponMaster::AHDWeaponMaster()
 	MagazineSize = 20;
 	ReloadTime = 0.5f;
 	WeaponType = EWeaponType::CW_Pistol;
+	bPlayerHasThisWeapon = false;
 }
 
 // Called when the game starts or when spawned

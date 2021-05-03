@@ -66,6 +66,10 @@ public:
 	// The type of weapon for the animation
 	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
 	EWeaponType WeaponType;
+
+	// Whether or not the player has this weapon available to them
+	UPROPERTY(EditDefaultsOnly, Category = "SetUp")
+	bool bPlayerHasThisWeapon;
 	
 protected:
 	// Called when the game starts or when spawned

@@ -28,6 +28,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
 	class UPawnMovementComponent* MovementComponent;
 
+	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
+	class UHDInventoryComponent* InventoryComponent;
+
 	// Information for enemy health bar
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Enemy Pawn")
 	class UWidgetComponent* WidgetComp;
@@ -41,7 +44,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Enemy Pawn")
 	FOnEnemyHit OnEnemyHit;
-	
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -86,7 +89,10 @@ private:
 
 	void MoveTowardsPlayer(float DeltaTime);
 
+	UPROPERTY()
 	AActor* StairsToReach;
+
+	UPROPERTY()
 	class AHDPlayerCharacter* PlayerCharacter;
 
 	void GetPlayerCharacter();

@@ -52,6 +52,9 @@ public:
 	UPROPERTY()
 	int32 WeaponType;
 
+	UPROPERTY()
+	bool bPlayerHasThisWeapon;
+
 	FWeaponInfo()
 	{
 		WeaponName = FText::FromString(TEXT(""));
@@ -65,6 +68,7 @@ public:
 		CurrentAmmoInClip = 0;
 		ReloadTime = 0.0f;
 		WeaponType = 1;
+		bPlayerHasThisWeapon = false;
 	}
 };
 
@@ -93,7 +97,10 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class UCameraComponent* GamePlayCameraComp;
-	
+
+	UPROPERTY(VisibleAnywhere, Category = "Player")
+	class UHDInventoryComponent* PlayerInventory;
+
 	// Widget to show reload status
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Gameplay")
 	class UWidgetComponent* ReloadWidgetComp;
@@ -187,6 +194,9 @@ private:
 
 	// Current Enum Index
 	int32 CurrentWeaponIndex;
+
+	// Stored weapon index at end of day
+	int32 EndOfDayWeaponIndex;
 
 	// Timer Handles
 	FTimerHandle ReloadTimer;

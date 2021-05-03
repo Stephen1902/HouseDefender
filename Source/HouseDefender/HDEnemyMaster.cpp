@@ -4,7 +4,9 @@
 #include "HDEnemyMaster.h"
 #include "TimerManager.h"
 #include "HDAIController.h"
+#include "HDDrops.h"
 #include "HDInteractableMaster.h"
+#include "HDInventoryComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
@@ -34,6 +36,8 @@ AHDEnemyMaster::AHDEnemyMaster()
 
 	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AHDEnemyMaster::OnBeginOverlap);
 	CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AHDEnemyMaster::OnEndOverlap);
+
+	InventoryComponent = CreateDefaultSubobject<UHDInventoryComponent>(TEXT("Inventory Component"));
 
 	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
@@ -121,6 +125,35 @@ void AHDEnemyMaster::SetCurrentLife(const float LifeTakenOff)
 
 void AHDEnemyMaster::DestroyEnemy()
 {
+	// Check the enemy has items in its inventory and check if we are to spawn them
+	if (InventoryComponent->InventoryItems.Num() > 0)
+	{
+		const TArray<FInventoryItems> LocalItemArray = InventoryComponent->GetInventoryItems(); 
+		for (int32 i = 0; i < LocalItemArray.Num(); ++i)
+		{
+			// Get a random number which, if it is less than the probability of spawning, then spawn them
+			const float SpawnChance = FMath::RandRange(0.f, 1.f);
+			if (SpawnChance < LocalItemArray[i].ItemProbability)
+			{
+				// Check maximum amount that can be spawned
+				const float SpawnAmount = FMath::RandRange(1, LocalItemArray[i].MaxCanSpawn);
+				
+				for (int j = 1; j <= SpawnAmount; ++j)
+				{
+					
+					FActorSpawnParameters SpawnParameters;
+					SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+					ensure(LocalItemArray[i].ItemClass);
+
+					FVector SpawnLocation = GetActorLocation();
+					SpawnLocation.Z = GetActorLocation().Z;
+					GetWorld()->SpawnActor<AHDDrops>(LocalItemArray[i].ItemClass, SpawnLocation, GetActorRotation(), SpawnParameters);					
+				}
+			}
+		}
+	}
+	
 	// Ensure the timer is cleared before destroying the enemy
 	GetWorldTimerManager().ClearTimer(TimerHandle_EndOfLife);
 	this->Destroy();
