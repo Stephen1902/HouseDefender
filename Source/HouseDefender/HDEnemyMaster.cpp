@@ -11,6 +11,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 AHDEnemyMaster::AHDEnemyMaster()
@@ -196,7 +197,7 @@ void AHDEnemyMaster::UpdateWidgetLocation() const
 
 void AHDEnemyMaster::UpdateWidgetInformation() const
 {
-	if (!WidgetComp->IsWidgetVisible())
+	if (!WidgetComp->IsVisible())
 	{
 		WidgetComp->SetVisibility(true);
 	}

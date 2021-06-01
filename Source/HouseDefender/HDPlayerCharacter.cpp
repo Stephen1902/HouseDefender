@@ -9,6 +9,7 @@
 #include "HDGameStateBase.h"
 #include "HDInventoryComponent.h"
 #include "HDWeaponMaster.h"
+#include "TimerManager.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Engine/TargetPoint.h"
@@ -16,7 +17,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "HDDrops.h"
 
 // Sets default values
 AHDPlayerCharacter::AHDPlayerCharacter()
@@ -349,7 +349,7 @@ void AHDPlayerCharacter::MovePlayerToDayEndPosition(float DeltaTime)
 	{
 		if (GSBase->GameStatus != EGameStatus::GS_Idle)
 		{
-			PC->SetShowMouseCursor(true);
+			PC->bShowMouseCursor = true;
 			GetMesh()->SetRelativeRotation(FRotator(0.f, -270.f, 0.f));
 			GSBase->SetGameStatus(EGameStatus::GS_Idle);
 
@@ -496,7 +496,7 @@ void AHDPlayerCharacter::CheckForReloadStatus()
 {
 	if (GetWorld()->GetTimerManager().IsTimerActive(ReloadTimer))
 	{
-		if (!ReloadWidgetComp->IsWidgetVisible())
+		if (!ReloadWidgetComp->IsVisible())
 		{
 			ReloadWidgetComp->SetHiddenInGame(false);
 		}

@@ -32,7 +32,7 @@ public:
 	bool bCanBeTraded;
 	
 	// Value of the item when selling or buying
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items", meta = (InlineEditConditionToggle, EditCondition = "bCanBeTraded"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items", meta = (EditCondition = "bCanBeTraded"))
 	float ItemValue;
 	
 protected:

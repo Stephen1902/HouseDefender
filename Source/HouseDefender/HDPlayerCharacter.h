@@ -3,9 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
-#include <activation.h>
-
 #include "GameFramework/Character.h"
 #include "HDPlayerCharacter.generated.h"
 
