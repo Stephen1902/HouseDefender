@@ -119,6 +119,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
 	FOnReload OnReload;
+
+	class ATargetPoint* GetDropLocation() const { return TPDropLocation; }
 	
 protected:
 	void TryToFire();
@@ -126,6 +128,9 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void GameStateChanged();
 
 public:	
 	// Called every frame
@@ -141,16 +146,16 @@ private:
 	void SetDayStartCameraLocation();
 	void MovePlayerToDayStartPosition(float DeltaTime);
 	void MovePlayerToDayEndPosition(float DeltaTime);
-	void CheckForLivingEnemies() const;
+	void CheckForLivingEnemies();
 	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
 	void WeaponSelected(int32 WeaponSelectedIn);
 	void ManualReload();
 	void BeginReload();
 	void Reload();
 	void UpdateAmmo();
-	void CheckCurrentGameState(float DeltaTime);
 	void CheckForReloadStatus();
 	void AddWeaponInfo();
+	void WaitForDayEnding();
 	
 	// Current player rotation, allowing them to look up or down based on value
 	float CurrentRotation;
@@ -173,7 +178,12 @@ private:
 	class ATargetPoint* TPEnemySpawn;
 
 	UPROPERTY()
+	class ATargetPoint* TPDropLocation;
+	
+	UPROPERTY()
 	class AActor* DayViewLocation;
+
+	
 
 	float MidPointBetweenDayStartAndEnemySpawn = 0.f;
 
@@ -197,12 +207,16 @@ private:
 
 	// Timer Handles
 	FTimerHandle ReloadTimer;
+	FTimerHandle EndOfDayDelay;
 
 	// Weapon struct
 	FWeaponInfo WeaponInfoStruct;
 	
 	// Array of all weapons for the player
 	TArray<FWeaponInfo> WeaponInfoArray;
+
+	bool bPlayerMoveToStart;
+	bool bPlayerMoveToEnd;
 };
 
 

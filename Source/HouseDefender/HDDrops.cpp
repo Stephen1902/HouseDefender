@@ -1,9 +1,13 @@
 // Copyright 2021 DME Games
 
 #include "HDDrops.h"
+#include "HDGameStateBase.h"
 #include "HDInventoryComponent.h"
 #include "HDPlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/TargetPoint.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/TimelineComponent.h"
 
 // Sets default values
 AHDDrops::AHDDrops()
@@ -15,6 +19,21 @@ AHDDrops::AHDDrops()
 	ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	SetRootComponent(ItemMesh);
 
+	MyTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline"));
+
+	InterpFunction.BindUFunction(this, FName("TimelineFloatReturn"));
+	TimelineFinished.BindUFunction(this, FName("OnTimelineFinished"));
+
+}
+
+void AHDDrops::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (MyTimeline->IsPlaying())
+	{
+		GEngine->AddOnScreenDebugMessage(0, 0.f, FColor::Green, TEXT("Timer Is Running"));
+	}
 }
 
 // Called when the game starts or when spawned
@@ -22,12 +41,59 @@ void AHDDrops::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (AHDPlayerCharacter* PlayerCharacter = Cast<AHDPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()))
+	GameStateBaseRef = Cast<AHDGameStateBase>(GetWorld()->GetGameState());
+
+	if (GameStateBaseRef)
 	{
-		if (UHDInventoryComponent* PInventory = PlayerCharacter->PlayerInventory)
-		{
-			PInventory->AddDroppedItem(this->GetClass());
-			// TODO add visual effect to move item an on screen bag
-		}
+		GameStateBaseRef->OnStatusChanged.AddDynamic(this, &AHDDrops::GameStateChanged);
 	}
+	
+	PlayerCharacter = Cast<AHDPlayerCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	
+	if (PlayerCharacter)
+	{
+		DropEndLocation = PlayerCharacter->GetDropLocation()->GetActorLocation();
+	}
+
+	if (FCurve)
+	{
+		// Update function
+		MyTimeline->AddInterpFloat(FCurve, InterpFunction, FName("Alpha"));
+		// OnFinished function
+		MyTimeline->SetTimelineFinishedFunc(TimelineFinished);
+
+		// Set the timeline settings
+		MyTimeline->SetLooping(false);
+		MyTimeline->SetIgnoreTimeDilation(true);
+	}
+
+	
+	DropStartLocation = GetActorLocation();
+}
+
+void AHDDrops::TimelineFloatReturn(float Value)
+{
+	SetActorLocation(FMath::Lerp(DropStartLocation, DropEndLocation, Value));
+}
+
+void AHDDrops::OnTimelineFinished()
+{
+	Destroy();
+}
+
+void AHDDrops::GameStateChanged()
+{
+	if (GameStateBaseRef && FCurve)
+	{
+		// At the end of the day, move the drop to the designated area	
+		MyTimeline->Play();
+		
+		if (PlayerCharacter)
+		{
+			if (UHDInventoryComponent* PInventory = PlayerCharacter->PlayerInventory)
+			{
+				PInventory->AddDroppedItem(this->GetClass());
+			}
+		}
+	}	
 }

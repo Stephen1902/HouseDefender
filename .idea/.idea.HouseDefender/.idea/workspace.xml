@@ -14,10 +14,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e946507d-a1b7-4d22-a065-ea551f1b6095" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Content/Blueprints/WorldItems/Curves/FloatCurveNormal.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.HouseDefender/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/WorldItems/BP_DropTest.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/WorldItems/BP_DropTest.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" afterDir="false" />
     </list>
@@ -59,11 +60,11 @@
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDInventoryComponent.h" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDInventoryComponent.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDDrops.h" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDDrops.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" />
-      <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.cpp" />
-      <option value="$PROJECT_DIR$/Source/HouseDefender/HDDrops.h" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1pTETYdAdFre5FOOOLjlevg8TpB" />
@@ -693,7 +694,11 @@
       <workItem from="1622463737610" duration="615000" />
       <workItem from="1622482486284" duration="1963000" />
       <workItem from="1622573795485" duration="266000" />
-      <workItem from="1622574280992" duration="1816000" />
+      <workItem from="1622574280992" duration="2019000" />
+      <workItem from="1622718200187" duration="2775000" />
+      <workItem from="1622740095338" duration="2457000" />
+      <workItem from="1622742748114" duration="2680000" />
+      <workItem from="1622745500188" duration="1203000" />
     </task>
     <task id="LOCAL-00001" summary="Added code to make the game 3D but decided to revert to 2D game space.&#10;&#10;Corrected weapon meshes to fire in correct direction.">
       <created>1619465003036</created>
@@ -709,7 +714,14 @@
       <option name="project" value="LOCAL" />
       <updated>1619465300769</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Updated code, preparing for drops and upgrades.">
+      <created>1622581537286</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1622581537286</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -717,6 +729,7 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Added code to make the game 3D but decided to revert to 2D game space.&#10;&#10;Corrected weapon meshes to fire in correct direction." />
     <MESSAGE value="Updated weapon meshes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated weapon meshes" />
+    <MESSAGE value="Updated code, preparing for drops and upgrades." />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated code, preparing for drops and upgrades." />
   </component>
 </project>

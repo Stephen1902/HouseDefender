@@ -54,6 +54,9 @@ AHDPlayerCharacter::AHDPlayerCharacter()
 	ReloadWidgetComp->SetHiddenInGame(true);
 
 	EndOfDayWeaponIndex = -1;
+
+	bPlayerMoveToStart = false;
+	bPlayerMoveToEnd = false;
 }
 
 int32 AHDPlayerCharacter::GetCurrentWeaponIndex() const
@@ -148,7 +151,8 @@ void AHDPlayerCharacter::BeginPlay()
 
 	if (GSBase)
 	{
-		GSBase->SetGameStatus(EGameStatus::GS_DayStarting);
+		GSBase->OnStatusChanged.AddDynamic(this, &AHDPlayerCharacter::GameStateChanged);
+		GSBase->SetGameStatus(EGameStatus::GS_DayStarting);	
 	}
 	else
 	{
@@ -167,9 +171,22 @@ void AHDPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CheckCurrentGameState(DeltaTime);
 	CheckForReloadStatus();
-	
+
+	if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarted)
+	{
+		CheckForLivingEnemies();
+	}
+
+	if (bPlayerMoveToStart)
+	{
+		MovePlayerToDayStartPosition(DeltaTime);
+	}
+
+	if (bPlayerMoveToEnd)
+	{
+		MovePlayerToDayEndPosition(DeltaTime);
+	}
 }
 
 // Called to bind functionality to input
@@ -268,6 +285,11 @@ void AHDPlayerCharacter::GetTargetPoints()
 			TPEnemySpawn = ThisTP;
 		}
 
+		if (TP->GetName() == TEXT("TPDropEndLocation"))
+		{
+			TPDropLocation = ThisTP;
+		}
+
 		if (TP->GetName() == TEXT("TPPlayerViewLocation"))
 		{
 			DayViewLocation = TP;
@@ -314,6 +336,7 @@ void AHDPlayerCharacter::MovePlayerToDayStartPosition(float DeltaTime)
 	{
 		if (GSBase->GameStatus != EGameStatus::GS_DayStarted)
 		{
+			bPlayerMoveToStart = false;
 			SetDayStartCameraLocation();
 			
 			GSBase->SetGameStatus(EGameStatus::GS_DayStarted);
@@ -349,6 +372,7 @@ void AHDPlayerCharacter::MovePlayerToDayEndPosition(float DeltaTime)
 	{
 		if (GSBase->GameStatus != EGameStatus::GS_Idle)
 		{
+			bPlayerMoveToEnd = false;
 			PC->bShowMouseCursor = true;
 			GetMesh()->SetRelativeRotation(FRotator(0.f, -270.f, 0.f));
 			GSBase->SetGameStatus(EGameStatus::GS_Idle);
@@ -361,18 +385,15 @@ void AHDPlayerCharacter::MovePlayerToDayEndPosition(float DeltaTime)
 	}
 }
 
-void AHDPlayerCharacter::CheckForLivingEnemies() const
+void AHDPlayerCharacter::CheckForLivingEnemies()
 {
-	if (GSBase->GameStatus == EGameStatus::GS_DayStarted)
+	if (GSBase->GameStatus == EGameStatus::GS_DayStarted && !GetWorld()->GetTimerManager().IsTimerActive(EndOfDayDelay))
 	{
 		TArray<AActor*> FoundEnemies;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHDEnemyMaster::StaticClass(), FoundEnemies);
 
 		if (FoundEnemies.Num() == 0)
 		{
-			//GamePlayCameraComp->SetActive(false);
-			//CameraComp->SetActive(true);
-			MoveCameraToNewLocation(GetWorld()->GetFirstPlayerController()->GetPawn());
 			GSBase->SetGameStatus(EGameStatus::GS_DayEnding);
 		}
 	}
@@ -470,23 +491,19 @@ void AHDPlayerCharacter::UpdateAmmo()
 	OnAmmoUpdated.Broadcast(NewAmmoInClip, NewAmmoAvailable);
 }
 
-void AHDPlayerCharacter::CheckCurrentGameState(float DeltaTime)
+void AHDPlayerCharacter::GameStateChanged()
 {
 	if (GSBase)
 	{
 		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarting)
 		{
-			MovePlayerToDayStartPosition(DeltaTime);
-		}
-
-		if (GSBase->GetGameStatus() == EGameStatus::GS_DayStarted)
-		{
-			CheckForLivingEnemies();
+			bPlayerMoveToStart = true;
 		}
 
 		if (GSBase->GetGameStatus() == EGameStatus::GS_DayEnding)
 		{
-			MovePlayerToDayEndPosition(DeltaTime);
+			// Wait while dropped items to move then move the player
+			GetWorld()->GetTimerManager().SetTimer(EndOfDayDelay, this, &AHDPlayerCharacter::WaitForDayEnding, 2.0f, false);
 		}
 	}
 
@@ -535,4 +552,13 @@ void AHDPlayerCharacter::AddWeaponInfo()
 			//UE_LOG(LogTemp, Warning, TEXT("Weapon Type at slot %i is %s"), WeaponInfoArray[i].WeaponType, *CurrentWeaponAsText);
 		}
 	}
+}
+
+void AHDPlayerCharacter::WaitForDayEnding()
+{
+	// Set Camera to behind the player's shoulder
+	MoveCameraToNewLocation(GetWorld()->GetFirstPlayerController()->GetPawn());
+	GetWorld()->GetTimerManager().ClearTimer(EndOfDayDelay);
+	
+	bPlayerMoveToEnd = true;
 }
