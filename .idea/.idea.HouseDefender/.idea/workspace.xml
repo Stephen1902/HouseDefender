@@ -21,8 +21,8 @@
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/WorldItems/BP_DropTest.uasset" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Blueprints/WorldItems/Curves/FloatCurveNormal.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/WorldItems/Curves/FloatCurveNormal.uasset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Content/Widgets/WBP_DayEnd.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Widgets/WBP_DayEnd.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDItems.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDDrops.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDItems.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Source/HouseDefender/HDGameStateBase.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/HouseDefender/HDGameStateBase.cpp" afterDir="false" />
@@ -79,10 +79,10 @@
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDInventoryComponent.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDItems.h" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDItems.cpp" />
-      <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDInventoryComponent.h" />
-      <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" />
       <option value="$PROJECT_DIR$/Source/HouseDefender/HDPlayerCharacter.h" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.h" />
+      <option value="$PROJECT_DIR$/Source/HouseDefender/HDEnemyMaster.cpp" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1pTETYdAdFre5FOOOLjlevg8TpB" />
@@ -727,6 +727,7 @@
       <workItem from="1623324528508" duration="3064000" />
       <workItem from="1623410068954" duration="3500000" />
       <workItem from="1623426051575" duration="7013000" />
+      <workItem from="1623446098161" duration="62000" />
     </task>
     <task id="LOCAL-00001" summary="Added code to make the game 3D but decided to revert to 2D game space.&#10;&#10;Corrected weapon meshes to fire in correct direction.">
       <created>1619465003036</created>
