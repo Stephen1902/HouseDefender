@@ -2,7 +2,7 @@
 
 
 #include "HDInventoryComponent.h"
-#include "HDDrops.h"
+#include "HDItems.h"
 
 // Sets default values for this component's properties
 UHDInventoryComponent::UHDInventoryComponent()
@@ -23,31 +23,41 @@ void UHDInventoryComponent::BeginPlay()
 	
 }
 
-void UHDInventoryComponent::AddDroppedItem(const TSubclassOf<AHDDrops> ItemClassIn)
+bool UHDInventoryComponent::AddDroppedItem(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn)
 {
+	bool bItemAddedSuccessfully = false;
+	
 	if (ItemClassIn)
 	{
-		bool bItemNeedsAdding = true;
-
-		if (InventoryItems.Num() > 0)
+		if (ItemMap.Find(ItemClassIn))
 		{
-			for (auto& It : InventoryItems)
-			{
-				if (ItemClassIn == It.ItemClass)
-				{
-					It.MaxCanSpawn += 1;
-					bItemNeedsAdding = false;
-				}
-			}
+			const int32 CurrentQty = ItemMap[ItemClassIn];
+			ItemMap.Add(ItemClassIn, QuantityIn + CurrentQty);
+			bItemAddedSuccessfully = true;
 		}
-		
-		if (bItemNeedsAdding)
+		else
 		{
-			FInventoryItems NewItem;
-			NewItem.ItemClass = ItemClassIn;
-			NewItem.ItemProbability = 1.f;
-			NewItem.MaxCanSpawn = 1;
-			InventoryItems.Add(NewItem);			
+			ItemMap.Add(ItemClassIn, QuantityIn);
+			bItemAddedSuccessfully = true;
+		}
+	}
+
+	return bItemAddedSuccessfully;
+}
+
+void UHDInventoryComponent::QueryInventory(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut)
+{
+	SuccessOut = false;
+	QuantityOut = 0;
+
+	if (ItemClassIn)
+	{
+		if (ItemMap.Find(ItemClassIn) && QuantityIn >= ItemMap[ItemClassIn])
+		{
+			SuccessOut = true;
+			QuantityOut = *ItemMap.Find(ItemClassIn);
 		}
 	}
 }
+
+

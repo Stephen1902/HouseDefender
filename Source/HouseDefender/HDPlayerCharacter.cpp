@@ -503,7 +503,7 @@ void AHDPlayerCharacter::GameStateChanged()
 		if (GSBase->GetGameStatus() == EGameStatus::GS_DayEnding)
 		{
 			// Wait while dropped items to move then move the player
-			GetWorld()->GetTimerManager().SetTimer(EndOfDayDelay, this, &AHDPlayerCharacter::WaitForDayEnding, 2.0f, false);
+			GetWorld()->GetTimerManager().SetTimer(EndOfDayDelay, this, &AHDPlayerCharacter::WaitForDayEnding, GSBase->GetEndOfDayDelayTime(), false);
 		}
 	}
 

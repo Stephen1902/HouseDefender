@@ -5,16 +5,27 @@
 #include "CoreMinimal.h"
 #include "components/TimelineComponent.h"
 #include "GameFramework/Actor.h"
-#include "HDDrops.generated.h"
+#include "HDItems.generated.h"
+
+UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+	IT_Plants		UMETA(DisplayName = "Plants"),
+	IT_TrapPart		UMETA(DisplayName = "Trap Part"),
+	IT_AmmoPart		UMETA(DisplayName = "Ammo Part"),
+	IT_Medicinal	UMETA(DisplayName = "Medicinal"),
+	IT_Trap			UMETA(DisplayName = "Trap"),
+	IT_Ammo			UMETA(DisplayName = "Ammo")
+};
 
 UCLASS()
-class HOUSEDEFENDER_API AHDDrops : public AActor
+class HOUSEDEFENDER_API AHDItems : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AHDDrops();
+	AHDItems();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Items")
 	class UStaticMeshComponent* ItemMesh;
@@ -31,23 +42,26 @@ public:
 	// Dictates whether or not the item can be traded
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
 	bool bCanBeTraded;
-	
+
 	// Value of the item when selling or buying
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items", meta = (EditCondition = "bCanBeTraded"))
 	float ItemValue;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
+	EItemType ItemType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
+	bool bIsCraftable;
+	
 	UPROPERTY()
 	UTimelineComponent* MyTimeline;
-    
-    /** Curve to be selected */
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Timeline")
-    class UCurveFloat* FCurve;
 
-	virtual void Tick(float DeltaSeconds) override;
+	void SetNumberOfItemsToAdd(int32 NumberToAddIn) { NumberOfItemsToAdd = NumberToAddIn; }
+	
 protected:
 	// World item to be added to the inventory when this pick up is collected
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "World Item")
-	AHDDrops* DroppedItem;
+	AHDItems* DroppedItem;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -77,4 +91,17 @@ private:
 
 	FVector DropStartLocation;
 	FVector DropEndLocation;
+
+	//    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Timeline")
+	/** Curve to be used for moving dropped items to the corner of the screen */
+	UPROPERTY()
+	class UCurveFloat* FCurve;
+	
+	float MaxCurveTimeRange;
+
+	void GetMovementCurve();
+	void GetReferences();
+	void SetDropLocations();
+
+	int32 NumberOfItemsToAdd;
 };

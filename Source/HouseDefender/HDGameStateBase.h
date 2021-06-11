@@ -37,4 +37,11 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Game State")
 	FOnStatusChanged OnStatusChanged;
+
+	UFUNCTION(BlueprintCallable, Category = "Game State Tester")
+	float GetEndOfDayDelayTime() const;
+
+	void SetEndOfDayDelayTime(const float DelayTimeIn) { EndOfDayDelayTime = DelayTimeIn; }
+private:
+	float EndOfDayDelayTime;
 };

@@ -73,6 +73,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, int32, NewWeaponVa
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnReload, float, ReloadTimeIn);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoUpdated, FText, NewAmmoInClip, FText, NewAmmoAvailable);
 DECLARE_DELEGATE_OneParam(FKeyboardWeaponSelect, int32);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUpdateInventory);
 
 UCLASS()
 class HOUSEDEFENDER_API AHDPlayerCharacter : public ACharacter
@@ -95,13 +96,14 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class UCameraComponent* GamePlayCameraComp;
 
-	UPROPERTY(VisibleAnywhere, Category = "Player")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player")
 	class UHDInventoryComponent* PlayerInventory;
 
 	// Widget to show reload status
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Gameplay")
 	class UWidgetComponent* ReloadWidgetComp;
 
+	// List of weapons available to the player
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 	TArray<TSubclassOf<class AHDWeaponMaster>> WeaponList;
 
@@ -120,6 +122,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Character Weapon")
 	FOnReload OnReload;
 
+	UPROPERTY(BlueprintAssignable, Category = "Player Inventory")
+	FOnUpdateInventory OnUpdateInventory;
+	
 	class ATargetPoint* GetDropLocation() const { return TPDropLocation; }
 	
 protected:

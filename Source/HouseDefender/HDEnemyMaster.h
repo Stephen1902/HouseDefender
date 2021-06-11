@@ -3,12 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "HDPlayerCharacter.h"
 #include "GameFramework/Pawn.h"
 #include "HDEnemyMaster.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, class UUserWidget*, EnemyPawnWidget, float, NewEnemyHealth);
+
+USTRUCT(BlueprintType)
+struct FDroppableItems
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
+	TSubclassOf<class AHDItems> ItemToDrop;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
+	float DropProbability;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
+	int32 MaxDropAmount;
+
+	FDroppableItems()
+	{
+		ItemToDrop = nullptr;
+		DropProbability = 0.5f;
+		MaxDropAmount = 1;
+	}
+};
 
 UCLASS()
 class HOUSEDEFENDER_API AHDEnemyMaster : public APawn
@@ -28,9 +49,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
 	class UPawnMovementComponent* MovementComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
-	class UHDInventoryComponent* InventoryComponent;
-
 	// Information for enemy health bar
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Enemy Pawn")
 	class UWidgetComponent* WidgetComp;
@@ -44,6 +62,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Enemy Pawn")
 	FOnEnemyHit OnEnemyHit;
+
+	/** Items that this type of enemy can drop */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
+	TArray<FDroppableItems> DroppableItemsList;
 
 protected:
 	// Called when the game starts or when spawned

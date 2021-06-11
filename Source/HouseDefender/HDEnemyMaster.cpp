@@ -4,7 +4,7 @@
 #include "HDEnemyMaster.h"
 #include "TimerManager.h"
 #include "HDAIController.h"
-#include "HDDrops.h"
+#include "HDItems.h"
 #include "HDInteractableMaster.h"
 #include "HDInventoryComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -37,8 +37,6 @@ AHDEnemyMaster::AHDEnemyMaster()
 
 	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AHDEnemyMaster::OnBeginOverlap);
 	CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AHDEnemyMaster::OnEndOverlap);
-
-	InventoryComponent = CreateDefaultSubobject<UHDInventoryComponent>(TEXT("Inventory Component"));
 
 	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
@@ -127,30 +125,29 @@ void AHDEnemyMaster::SetCurrentLife(const float LifeTakenOff)
 void AHDEnemyMaster::DestroyEnemy()
 {
 	// Check the enemy has items in its inventory and check if we are to spawn them
-	if (InventoryComponent->InventoryItems.Num() > 0)
+	if (DroppableItemsList.Num() > 0)
 	{
-		const TArray<FInventoryItems> LocalItemArray = InventoryComponent->GetInventoryItems(); 
-		for (int32 i = 0; i < LocalItemArray.Num(); ++i)
+		//const TArray<FInventoryItems> LocalItemArray = InventoryComponent->GetInventoryItems(); 
+		for (auto& It : DroppableItemsList)
 		{
 			// Get a random number which, if it is less than the probability of spawning, then spawn them
 			const float SpawnChance = FMath::RandRange(0.f, 1.f);
-			if (SpawnChance < LocalItemArray[i].ItemProbability)
-			{
-				// Check maximum amount that can be spawned
-				const float SpawnAmount = FMath::RandRange(1, LocalItemArray[i].MaxCanSpawn);
+			if (SpawnChance < It.DropProbability)
 				
-				for (int j = 1; j <= SpawnAmount; ++j)
-				{
-					
-					FActorSpawnParameters SpawnParameters;
-					SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			{
+				// Spawn a visible actor into the world					
+				FActorSpawnParameters SpawnParameters;
+				SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-					ensure(LocalItemArray[i].ItemClass);
+				ensure(It.ItemToDrop);
 
-					FVector SpawnLocation = GetActorLocation();
-					SpawnLocation.Z = GetActorLocation().Z;
-					GetWorld()->SpawnActor<AHDDrops>(LocalItemArray[i].ItemClass, SpawnLocation, GetActorRotation(), SpawnParameters);					
-				}
+				FVector SpawnLocation = GetActorLocation();
+				SpawnLocation.Z = GetActorLocation().Z;
+				AHDItems* ItemToAdd = GetWorld()->SpawnActor<AHDItems>(It.ItemToDrop, SpawnLocation, GetActorRotation(), SpawnParameters);
+
+				// Check maximum amount that can be spawned
+				const float SpawnAmount = FMath::RandRange(1, It.MaxDropAmount);				
+				ItemToAdd->SetNumberOfItemsToAdd(SpawnAmount);
 			}
 		}
 	}

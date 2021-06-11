@@ -9,3 +9,8 @@ void AHDGameStateBase::SetGameStatus(const EGameStatus GameStatusIn)
 
 	OnStatusChanged.Broadcast();
 }
+
+float AHDGameStateBase::GetEndOfDayDelayTime() const
+{
+	return  EndOfDayDelayTime;
+}
