@@ -20,7 +20,6 @@ void UHDInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
 }
 
 bool UHDInventoryComponent::AddDroppedItem(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn)
@@ -56,6 +55,27 @@ void UHDInventoryComponent::QueryInventory(const TSubclassOf<AHDItems> ItemClass
 		{
 			SuccessOut = true;
 			QuantityOut = *ItemMap.Find(ItemClassIn);
+		}
+	}
+}
+
+void UHDInventoryComponent::RemoveItemFromInventory(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut)
+{
+	SuccessOut = false;
+	QuantityOut = 0;
+
+	if (ItemClassIn)
+	{
+		int32 QuantityFromQuery = 0;
+		bool SuccessFromQuery = false;
+
+		QueryInventory(ItemClassIn, QuantityIn, QuantityFromQuery, SuccessFromQuery);
+
+		if (SuccessFromQuery)
+		{
+			QuantityOut = QuantityIn - QuantityFromQuery;
+			ItemMap.Add(ItemClassIn, QuantityOut);
+			SuccessOut = true;
 		}
 	}
 }

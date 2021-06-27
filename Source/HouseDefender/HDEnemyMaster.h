@@ -60,6 +60,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
 	float MovementSpeed;
 
+	// Damage dealt to traps per second 
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
+	float DamageDealtToTraps;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Enemy Pawn")
 	FOnEnemyHit OnEnemyHit;
 
@@ -67,6 +71,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
 	TArray<FDroppableItems> DroppableItemsList;
 
+	
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,12 +84,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+/** Kept here in case of later use
 	UFUNCTION()
 	void OnBeginOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	UFUNCTION()
 	void OnEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
+*/
+	
 	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
     bool GetHasBeenHit() const { return bHasBeenHit; }
 
@@ -91,12 +99,25 @@ public:
     void SetHasBeenHit(bool NewHitIn);
 
 	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
+	bool GetIsBlocked() const { return bIsBlocked; }
+
+	// Set whether or not the enemy is blocked by a trap
+	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
+	void SetIsBlocked(const bool NewBlockIn) { bIsBlocked = NewBlockIn; }
+
+	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
 	bool GetIsDead() const;
 
 	void SetCurrentLife(float LifeTakenOff);
 
+	void SetSpeedReductionFromTraps(const float SpeedIn) { SpeedReductionFromTraps = SpeedIn; }
+	void SetDamageTaken(const float DamageIn) { DamageTaken = DamageIn; }
+
+	float GetDamageDealtToTraps() const { return DamageDealtToTraps; }
+
 private:
 	bool bHasBeenHit = false;
+	bool bIsBlocked = false;
 
 	float CurrentLife;
 
@@ -111,6 +132,8 @@ private:
 
 	void MoveTowardsPlayer(float DeltaTime);
 
+	void CheckForDamage(float DeltaTime);
+
 	UPROPERTY()
 	AActor* StairsToReach;
 
@@ -120,4 +143,9 @@ private:
 	void GetPlayerCharacter();
 	void UpdateWidgetLocation() const;
 	void UpdateWidgetInformation() const;
+
+	float SpeedReductionFromTraps;
+	float DamageTaken;
+	
+	
 };

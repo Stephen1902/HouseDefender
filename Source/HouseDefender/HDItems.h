@@ -51,8 +51,11 @@ public:
 	EItemType ItemType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
-	bool bIsCraftable;
-	
+	bool bIsCrafted;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items", meta = (EditCondition = "bIsCrafted"))
+	TMap<TSubclassOf<AHDItems>, int32> NeededForCrafting; 
+
 	UPROPERTY()
 	UTimelineComponent* MyTimeline;
 

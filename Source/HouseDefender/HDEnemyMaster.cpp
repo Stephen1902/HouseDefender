@@ -6,7 +6,6 @@
 #include "HDAIController.h"
 #include "HDItems.h"
 #include "HDInteractableMaster.h"
-#include "HDInventoryComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
@@ -35,8 +34,10 @@ AHDEnemyMaster::AHDEnemyMaster()
 	AIControllerClass = AHDAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AHDEnemyMaster::OnBeginOverlap);
-	CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AHDEnemyMaster::OnEndOverlap);
+// Kept here in case of later use
+//	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AHDEnemyMaster::OnBeginOverlap);
+//	CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AHDEnemyMaster::OnEndOverlap);
+
 
 	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
@@ -45,6 +46,7 @@ AHDEnemyMaster::AHDEnemyMaster()
 	
 	StartingLife = 100.f;
 	MovementSpeed = 20.f;
+	SpeedReductionFromTraps = 1.0f;
 }
 
 // Called when the game starts or when spawned
@@ -70,6 +72,7 @@ void AHDEnemyMaster::Tick(float DeltaTime)
 
 	MoveTowardsPlayer(DeltaTime);
 	UpdateWidgetLocation();
+	CheckForDamage(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -79,15 +82,17 @@ void AHDEnemyMaster::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 }
 
+/** Kept here in case of later use
 void AHDEnemyMaster::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap begun %s"), *OtherActor->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("Pears Overlap begun %s"), *OtherActor->GetName());
 }
 
 void AHDEnemyMaster::OnEndOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap ended"));
+	UE_LOG(LogTemp, Warning, TEXT("Pears Overlap ended"));
 }
+*/
 
 void AHDEnemyMaster::SetHasBeenHit(const bool NewHitIn)
 {
@@ -106,19 +111,30 @@ bool AHDEnemyMaster::GetIsDead() const
 
 void AHDEnemyMaster::SetCurrentLife(const float LifeTakenOff)
 {
-	CurrentLife -= LifeTakenOff;
-
-	// Update the enemy widget
-	UpdateWidgetInformation();
-
-	// Play the hit animation
-	SetHasBeenHit(true);
-	
-	// Check if the enemy is dead and, after the delay for the death animation, destroy it
-	if (GetIsDead())
+	if (!FMath::IsNearlyZero(LifeTakenOff) && !GetIsDead())
 	{
-		WidgetComp->SetVisibility(false);
-		GetWorldTimerManager().SetTimer(TimerHandle_EndOfLife, this, &AHDEnemyMaster::DestroyEnemy, 3.15f, false, -1.f);
+		CurrentLife -= LifeTakenOff;
+
+		// Update the enemy widget
+		UpdateWidgetInformation();
+
+		if (!GetIsBlocked())
+		{
+			SetHasBeenHit(true);
+		}
+		else
+		{
+			SetHasBeenHit(false);
+		}
+		
+		// Check if the enemy is dead  and destroy them, using IsTimerActive to only call this once
+		if (GetIsDead() && !GetWorldTimerManager().IsTimerActive(TimerHandle_EndOfLife)) 
+		{
+			SetHasBeenHit(false);
+			SetIsBlocked(false);
+			WidgetComp->SetVisibility(false);
+			GetWorldTimerManager().SetTimer(TimerHandle_EndOfLife, this, &AHDEnemyMaster::DestroyEnemy, 3.15f, false, -1.f);
+		}
 	}
 }
 
@@ -167,7 +183,7 @@ void AHDEnemyMaster::MoveTowardsPlayer(float DeltaTime)
 {
 	if (PlayerCharacter && !GetIsDead() && !GetHasBeenHit())
 	{
-		const float NewActorX = GetActorLocation().X - (MovementSpeed * DeltaTime);
+		const float NewActorX = GetActorLocation().X - (MovementSpeed * (DeltaTime * SpeedReductionFromTraps));
 		const float CurrentActorY = GetActorLocation().Y;
 		const float CurrentActorZ = GetActorLocation().Z;
 		
@@ -202,5 +218,13 @@ void AHDEnemyMaster::UpdateWidgetInformation() const
 	const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
 	UUserWidget* UserWidget = WidgetComp->GetUserWidgetObject();
 	OnEnemyHit.Broadcast(UserWidget, CurrentLifeAsPercent);
+}
+
+void AHDEnemyMaster::CheckForDamage(float DeltaTime)
+{
+	if (!FMath::IsNearlyZero(DamageTaken))
+	{
+		SetCurrentLife(DamageTaken * DeltaTime);
+	}
 }
 

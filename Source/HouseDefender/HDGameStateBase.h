@@ -41,6 +41,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game State Tester")
 	float GetEndOfDayDelayTime() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Crafting Subclass")
+	static TArray<class AHDItems*> GetItemSubClasses();
+
+	UFUNCTION(BlueprintCallable, Category = "Crafting Subclass")
+	static TArray<UClass*> GetItemClasses();
+	
 	void SetEndOfDayDelayTime(const float DelayTimeIn) { EndOfDayDelayTime = DelayTimeIn; }
 private:
 	float EndOfDayDelayTime;

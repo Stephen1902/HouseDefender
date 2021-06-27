@@ -64,6 +64,19 @@ int32 AHDPlayerCharacter::GetCurrentWeaponIndex() const
 	return WeaponInfoArray[CurrentWeaponIndex].WeaponType;
 }
 
+FVector AHDPlayerCharacter::GetDropLocation() const
+{
+	if (TPDropLocation)
+	{
+		return TPDropLocation->GetActorLocation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TPDropLocation not set"));
+		return FVector(0.f);
+	}
+}
+
 void AHDPlayerCharacter::TryToFire()
 {
 	// Check if a valid weapon is available and that the day has started
@@ -152,7 +165,7 @@ void AHDPlayerCharacter::BeginPlay()
 	if (GSBase)
 	{
 		GSBase->OnStatusChanged.AddDynamic(this, &AHDPlayerCharacter::GameStateChanged);
-		GSBase->SetGameStatus(EGameStatus::GS_DayStarting);	
+		GSBase->SetGameStatus(EGameStatus::GS_DayStarting);
 	}
 	else
 	{
@@ -296,7 +309,7 @@ void AHDPlayerCharacter::GetTargetPoints()
 		}
 	}
 
-	if (!TPDayStart || !TPDayEnd || !TPEnemySpawn || !DayViewLocation)
+	if (!TPDayStart || !TPDayEnd || !TPEnemySpawn || !DayViewLocation || !TPDropLocation)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Target Point(s) for the player have not been set.  Please Check."));
 	}

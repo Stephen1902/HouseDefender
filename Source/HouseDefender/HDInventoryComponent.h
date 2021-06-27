@@ -26,12 +26,16 @@ public:
 	TMap<TSubclassOf<class AHDItems>, int32> ItemMap;
 
 	// Check the existing array and add quantity or new item, depending on requirement
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool AddDroppedItem(const TSubclassOf<class AHDItems> ItemClassIn, int32 QuantityIn);
 
 	// Get the current items in the inventory
-	UFUNCTION(BlueprintCallable, Category = "Testing")
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void QueryInventory(const TSubclassOf<class AHDItems> ItemClassIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut);
 
+	// Remove items from inventory
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void RemoveItemFromInventory(const TSubclassOf<class AHDItems> ItemClassIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut);
 	
 protected:
 	// Called when the game starts

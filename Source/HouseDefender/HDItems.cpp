@@ -5,7 +5,6 @@
 #include "HDInventoryComponent.h"
 #include "HDPlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
-#include "Engine/TargetPoint.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/TimelineComponent.h"
 #include "UObject/ConstructorHelpers.h"
@@ -52,7 +51,7 @@ void AHDItems::OnTimelineFinished()
 
 void AHDItems::GameStateChanged()
 {
-	if (GameStateBaseRef && FCurve)
+	if (GameStateBaseRef && FCurve && ItemType != EItemType::IT_Trap)
 	{
 		// At the end of the day, move the drop to the designated area	
 		MyTimeline->Play();
@@ -106,10 +105,10 @@ void AHDItems::GetReferences()
 
 void AHDItems::SetDropLocations()
 {
-	if (PlayerCharacter)
+	if (PlayerCharacter && ItemType != EItemType::IT_Trap)
 	{
 		DropStartLocation = GetActorLocation();
-		DropEndLocation = PlayerCharacter->GetDropLocation()->GetActorLocation();
+		DropEndLocation = PlayerCharacter->GetDropLocation();
 	}
 
 	

@@ -125,7 +125,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Player Inventory")
 	FOnUpdateInventory OnUpdateInventory;
 	
-	class ATargetPoint* GetDropLocation() const { return TPDropLocation; }
+	FVector GetDropLocation() const;
 	
 protected:
 	void TryToFire();
