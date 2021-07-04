@@ -38,11 +38,12 @@ AHDEnemyMaster::AHDEnemyMaster()
 //	CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &AHDEnemyMaster::OnBeginOverlap);
 //	CapsuleComponent->OnComponentEndOverlap.AddDynamic(this, &AHDEnemyMaster::OnEndOverlap);
 
-
 	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
 	WidgetComp->SetDrawSize(FVector2D(100.f, 20.f));
+	WidgetComp->SetupAttachment(MeshComponent);
 	WidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+	ColourOfHealthBar = FLinearColor(1.f, 0.125f, 0.125f, 3.0f);
 	
 	StartingLife = 100.f;
 	MovementSpeed = 20.f;
@@ -55,10 +56,10 @@ void AHDEnemyMaster::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentLife = StartingLife;
-	WidgetLocationAtStart = WidgetComp->GetRelativeLocation();
-	WidgetComp->SetVisibility(false);
+
 	
 	GetPlayerCharacter();
+	SetWidgetInfo();
 
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHDInteractableMaster::StaticClass(), FoundActors);
@@ -132,6 +133,7 @@ void AHDEnemyMaster::SetCurrentLife(const float LifeTakenOff)
 		{
 			SetHasBeenHit(false);
 			SetIsBlocked(false);
+			CapsuleComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 			WidgetComp->SetVisibility(false);
 			GetWorldTimerManager().SetTimer(TimerHandle_EndOfLife, this, &AHDEnemyMaster::DestroyEnemy, 3.15f, false, -1.f);
 		}
@@ -216,8 +218,21 @@ void AHDEnemyMaster::UpdateWidgetInformation() const
 	}
 
 	const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
-	UUserWidget* UserWidget = WidgetComp->GetUserWidgetObject();
 	OnEnemyHit.Broadcast(UserWidget, CurrentLifeAsPercent);
+}
+
+void AHDEnemyMaster::SetWidgetInfo()
+{
+	if (WidgetComp)
+	{
+		WidgetLocationAtStart = WidgetComp->GetRelativeLocation();
+		UserWidget = WidgetComp->GetUserWidgetObject();
+		WidgetComp->SetVisibility(false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WidgetInfo has not been set for %s"), *GetName());
+	}
 }
 
 void AHDEnemyMaster::CheckForDamage(float DeltaTime)

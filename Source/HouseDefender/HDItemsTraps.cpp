@@ -5,6 +5,7 @@
 
 #include "HDEnemyMaster.h"
 #include "Chaos/AABBTree.h"
+#include "Components/WidgetComponent.h"
 
 AHDItemsTraps::AHDItemsTraps()
 {
@@ -17,12 +18,26 @@ AHDItemsTraps::AHDItemsTraps()
 	
 	ItemType = EItemType::IT_Trap;
 
+	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
+	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
+	WidgetComp->SetDrawSize(FVector2D(100.f, 20.f));
+	WidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+
 	bIsPlaceable = true;
 	HoursNeededToPlace = 1.f;
 	bSlowsEnemy = false;
 	bDamagesEnemy = false;
 	bHasLifeAmount = true;
 	StartingLife = 100.f;
+	ColourOfHealthBar = FLinearColor(0.112136f, 0.128103f, 1.f, 3.0f);
+}
+
+void AHDItemsTraps::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentLife = StartingLife;
+	SetWidgetInfo();
 }
 
 void AHDItemsTraps::Tick(float DeltaTime)
@@ -60,10 +75,11 @@ void AHDItemsTraps::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherAc
 				CurrentDamageBeingDealt += OverlappedEnemy->GetDamageDealtToTraps();
 			}
 
-			if (!GetWorldTimerManager().IsTimerActive(FakeTimer))
+/**			if (!GetWorldTimerManager().IsTimerActive(FakeTimer))
 			{
 				GetWorldTimerManager().SetTimer(FakeTimer, this, &AHDItemsTraps::OnTrapDestroyed, 5.0f, false, -1.f);
 			}
+*/
 		}
 	}
 }
@@ -115,14 +131,42 @@ void AHDItemsTraps::OnEndOverlap(UPrimitiveComponent* HitComp, AActor* OtherActo
 
 void AHDItemsTraps::CheckForDamage(float DeltaTime)
 {
+	GEngine->AddOnScreenDebugMessage(0, 0.f, FColor::Green, (TEXT("%s"), *FString::SanitizeFloat(OverlappingEnemies.Num())));
 	if (!FMath::IsNearlyZero(CurrentDamageBeingDealt))
 	{
 		CurrentLife -= (CurrentDamageBeingDealt * DeltaTime);
+		
 
 		if (CurrentLife <= 0.f)
 		{
-			// TODO Deal with removal or destruction of mesh
+			OnTrapDestroyed();
 		}
+		else if (WidgetComp)
+		{
+			if (!WidgetComp->IsVisible())
+			{
+				WidgetComp->SetVisibility(true);
+			}
+			const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
+			OnTrapHit.Broadcast(UserWidget, CurrentLifeAsPercent);
+		}
+	}
+}
+
+void AHDItemsTraps::SetWidgetInfo()
+{
+	if (WidgetComp)
+	{
+		WidgetLocationAtStart = WidgetComp->GetRelativeLocation();
+		UserWidget = WidgetComp->GetUserWidgetObject();
+		const FBox BoundingBox = ItemMesh->GetStaticMesh()->GetBoundingBox();
+		const float MeshHeight = BoundingBox.GetExtent().Z;
+		WidgetComp->SetRelativeLocation(FVector(0.f, 0.f, MeshHeight + 120.f));
+		WidgetComp->SetVisibility(false);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WidgetInfo has not been set for %s"), *GetName());
 	}
 }
 
@@ -148,5 +192,6 @@ void AHDItemsTraps::OnTrapDestroyed()
 	OverlappingEnemies.Empty();
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ItemMesh->SetGenerateOverlapEvents(false);
+	WidgetComp->SetVisibility(false);
 	//this->Destroy();
 }

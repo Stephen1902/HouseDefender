@@ -6,6 +6,8 @@
 #include "HDItems.h"
 #include "HDItemsTraps.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTrapHit, class UUserWidget*, TrapWidget, float, NewTrapHealth);
+
 /**
  * 
  */
@@ -25,6 +27,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Traps")
 	bool bSlowsEnemy;
 
+	// Information for enemy health bar
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Enemy Pawn")
+	class UWidgetComponent* WidgetComp;
+
 	/** How much in walking speed the enemy speed is reduced, 0-1 range.  0 is completely stopped until trap is destroyed */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Traps", meta = (EditCondition = "bSlowsEnemy", ClampMax = 1))
 	float EnemySlowRate;
@@ -42,6 +48,14 @@ public:
 	/** Starting amount of life for this trap */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Traps", meta = (EditCondition = "bHasLifeAmount"))
 	float StartingLife;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Traps", meta = (EditCondition = "bHasLifeAmount"))
+	FLinearColor ColourOfHealthBar;
+
+	UPROPERTY(BlueprintAssignable, Category = "Traps")
+	FOnTrapHit OnTrapHit;
+
+	virtual void BeginPlay() override;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -53,6 +67,9 @@ public:
 	void OnEndOverlap(class UPrimitiveComponent* HitComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	void SetCurrentDamage(const float DamageIn) { CurrentDamageBeingDealt += DamageIn; }
+
+	UFUNCTION(BlueprintCallable, Category = "Trap Functions")
+	FLinearColor GetColourOfHealthBar() const { return ColourOfHealthBar; }
 	
 private:
 	float CurrentLife;
@@ -61,7 +78,13 @@ private:
 	bool bIsBeingOverlapped;
 
 	void CheckForDamage(float DeltaTime);
+	void SetWidgetInfo();
+	FVector WidgetLocationAtStart;
 
+	UPROPERTY()
+	class UUserWidget* UserWidget;
+
+	
 	FTimerHandle FakeTimer;
 	void OnTrapDestroyed();
 

@@ -63,6 +63,9 @@ public:
 	// Damage dealt to traps per second 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
 	float DamageDealtToTraps;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
+	FLinearColor ColourOfHealthBar;
 	
 	UPROPERTY(BlueprintAssignable, Category = "Enemy Pawn")
 	FOnEnemyHit OnEnemyHit;
@@ -108,6 +111,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
 	bool GetIsDead() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Enemy Functions")
+	FLinearColor GetColourOfHealthBar() const { return ColourOfHealthBar; }
+
 	void SetCurrentLife(float LifeTakenOff);
 
 	void SetSpeedReductionFromTraps(const float SpeedIn) { SpeedReductionFromTraps = SpeedIn; }
@@ -121,7 +127,6 @@ private:
 
 	float CurrentLife;
 
-	FVector WidgetLocationAtStart;
 
 	FTimerHandle TimerHandle_EndOfLife;
 
@@ -143,9 +148,14 @@ private:
 	void GetPlayerCharacter();
 	void UpdateWidgetLocation() const;
 	void UpdateWidgetInformation() const;
+	void SetWidgetInfo();
 
 	float SpeedReductionFromTraps;
 	float DamageTaken;
-	
+
+	FVector WidgetLocationAtStart;
+
+	UPROPERTY()
+	class UUserWidget* UserWidget;
 	
 };
