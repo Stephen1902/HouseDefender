@@ -12,7 +12,8 @@
 				"Engine",
 				"AIModule",
 				"CoreUObject",
-				"UMG"
+				"UMG",
+				"UMGEditor"
 			]
 		}
 	],
@@ -20,6 +21,10 @@
 		{
 			"Name": "RiderSourceCodeAccess",
 			"Enabled": true
+		},
+		{
+			"Name": "UdpMessaging",
+			"Enabled": false
 		}
 	]
 }
