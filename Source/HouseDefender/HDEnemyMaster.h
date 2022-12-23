@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "HDPlayerCharacter.h"
 #include "GameFramework/Pawn.h"
+//#include "Kismet/BlueprintFunctionLibrary.h"
 #include "HDEnemyMaster.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHit, class UUserWidget*, EnemyPawnWidget, float, NewEnemyHealth);
@@ -14,18 +15,31 @@ struct FDroppableItems
 {
 	GENERATED_BODY()
 
+	// ItemID as found in the data table 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
-	TSubclassOf<class AHDItems> ItemToDrop;
+	FName ItemIdToDrop;
 
+	// The name of the item that will be dropped.  Change via Item ID To Drop
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Droppable Item")
+	FText ItemNameToDrop;
+
+	// A check against the data table as some items may only be available through crafting, not drops
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Droppable Item")
+	bool bIsCrafted;
+
+	// How likely this item is to drop
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
 	float DropProbability;
 
+	// The maximum number of this item that will be dropped
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
 	int32 MaxDropAmount;
 
 	FDroppableItems()
 	{
-		ItemToDrop = nullptr;
+		ItemIdToDrop = FName(TEXT("99999"));
+		ItemNameToDrop = FText::FromString(TEXT("None"));
+		bIsCrafted = false;
 		DropProbability = 0.5f;
 		MaxDropAmount = 1;
 	}
@@ -41,24 +55,25 @@ public:
 	AHDEnemyMaster();
 
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
-	class UCapsuleComponent* CapsuleComponent;
+	UCapsuleComponent* CapsuleComponent;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
-	class USkeletalMeshComponent* MeshComponent;
+	USkeletalMeshComponent* MeshComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Pawn")
-	class UPawnMovementComponent* MovementComponent;
+	UPawnMovementComponent* MovementComponent;
 
 	// Information for enemy health bar
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"), Category = "Enemy Pawn")
-	class UWidgetComponent* WidgetComp;
+	UWidgetComponent* WidgetComp;
 
+	// Starting life this enemy has when spawning
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
 	float StartingLife;
 
-	// distance covered in seconds
+	// Distance covered in seconds when not affected by any traps that slow this enemy
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
-	float MovementSpeed;
+	float DefaultMovementSpeed;
 
 	// Damage dealt to traps per second 
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy Pawn")
@@ -73,19 +88,27 @@ public:
 	/** Items that this type of enemy can drop */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Droppable Item")
 	TArray<FDroppableItems> DroppableItemsList;
-
-	
-	
+		
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+/* Not needed but kept here to keep code on getting a reference in a constructor
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Game State")
+	//TSubclassOf<class AHDGameStateBase> GameStateRef;
+	class AHDGameStateBase* GameStateRef;
+*/
+	// Information storage for all game items
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Items")
+	class UDataTable* ItemInfoTable;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 /** Kept here in case of later use
 	UFUNCTION()
@@ -116,8 +139,8 @@ public:
 
 	void SetCurrentLife(float LifeTakenOff);
 
-	void SetSpeedReductionFromTraps(const float SpeedIn) { SpeedReductionFromTraps = SpeedIn; }
-	void SetDamageTaken(const float DamageIn) { DamageTaken = DamageIn; }
+	void SetSpeedReductionFromTraps(const float SpeedIn);
+	void SetDamageTaken(const float DamageIn);
 
 	float GetDamageDealtToTraps() const { return DamageDealtToTraps; }
 
@@ -126,7 +149,6 @@ private:
 	bool bIsBlocked = false;
 
 	float CurrentLife;
-
 
 	FTimerHandle TimerHandle_EndOfLife;
 
@@ -150,12 +172,29 @@ private:
 	void UpdateWidgetInformation() const;
 	void SetWidgetInfo();
 
+// No longer used but kept in the cpp to show how to get a reference in the constructor
+	// void GetGameState();
+
+	
 	float SpeedReductionFromTraps;
 	float DamageTaken;
+	float CurrentMovementSpeed;
 
 	FVector WidgetLocationAtStart;
 
 	UPROPERTY()
 	class UUserWidget* UserWidget;
-	
+
+	// Pointer for a placed trap, if overlapping it
+	UPROPERTY()
+	class AHDItems* OverlappedTrapRef;
+
+//	UFUNCTION()
+//	void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnCapsuleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION()
+	void OnCapsuleBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	 
 };

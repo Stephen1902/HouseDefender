@@ -110,6 +110,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
 	float GetCurrentRotation() const { return CurrentRotation; }
 
+	// Get the current location of the day time and crafting view camera
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	AActor* GetDayViewCameraLocation() const { return DayViewLocation; }
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Character Weapon")
 	int32 GetCurrentWeaponIndex() const;
 
@@ -124,11 +131,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Player Inventory")
 	FOnUpdateInventory OnUpdateInventory;
-	
+
 	FVector GetDropLocation() const;
-	
-protected:
+
+	// Called from HDPlayerController to advise when traps are being placed in the world
+	void IsPlacingTraps(bool PlacingTrapIn) const;
+
 	void TryToFire();
+protected:
+	
 	void Fire();
 	
 	// Called when the game starts or when spawned
@@ -152,7 +163,6 @@ private:
 	void MovePlayerToDayStartPosition(float DeltaTime);
 	void MovePlayerToDayEndPosition(float DeltaTime);
 	void CheckForLivingEnemies();
-	void MoveCameraToNewLocation(AActor* ActorToMoveTo) const;
 	void WeaponSelected(int32 WeaponSelectedIn);
 	void ManualReload();
 	void BeginReload();
@@ -187,8 +197,6 @@ private:
 	
 	UPROPERTY()
 	class AActor* DayViewLocation;
-
-	
 
 	float MidPointBetweenDayStartAndEnemySpawn = 0.f;
 

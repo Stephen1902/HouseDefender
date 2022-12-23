@@ -2,9 +2,7 @@
 
 
 #include "HDItemsTraps.h"
-
 #include "HDEnemyMaster.h"
-#include "Chaos/AABBTree.h"
 #include "Components/WidgetComponent.h"
 
 AHDItemsTraps::AHDItemsTraps()
@@ -17,19 +15,21 @@ AHDItemsTraps::AHDItemsTraps()
 	ItemMesh->OnComponentEndOverlap.AddDynamic(this, &AHDItemsTraps::OnEndOverlap);
 	
 	ItemType = EItemType::IT_Trap;
-
+/** Keep only in case of having a visible health widget 
 	WidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget"));
 	WidgetComp->SetWidgetSpace(EWidgetSpace::Screen);
 	WidgetComp->SetDrawSize(FVector2D(100.f, 20.f));
 	WidgetComp->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
-
+*/
 	bIsPlaceable = true;
 	HoursNeededToPlace = 1.f;
 	bSlowsEnemy = false;
 	bDamagesEnemy = false;
 	bHasLifeAmount = true;
 	StartingLife = 100.f;
-	ColourOfHealthBar = FLinearColor(0.112136f, 0.128103f, 1.f, 3.0f);
+	HoursNeededToRepair = 0.25f;
+//	ColourOfHealthBar = FLinearColor(0.112136f, 0.128103f, 1.f, 3.0f);
+	bHasBeenDestroyed = false;
 }
 
 void AHDItemsTraps::BeginPlay()
@@ -38,6 +38,8 @@ void AHDItemsTraps::BeginPlay()
 
 	CurrentLife = StartingLife;
 	SetWidgetInfo();
+
+
 }
 
 void AHDItemsTraps::Tick(float DeltaTime)
@@ -92,7 +94,7 @@ void AHDItemsTraps::OnEndOverlap(UPrimitiveComponent* HitComp, AActor* OtherActo
 		{
 			int32 MatchFound = -1;
 
-			for (int32 i = OverlappingEnemies.Num() - 1; i >= 0; --i)
+			for (int32 i = 0; i < OverlappingEnemies.Num(); ++i)
 			{
 				if (OverlappingEnemies[i] == OverlappedEnemy)
 				{
@@ -131,16 +133,16 @@ void AHDItemsTraps::OnEndOverlap(UPrimitiveComponent* HitComp, AActor* OtherActo
 
 void AHDItemsTraps::CheckForDamage(float DeltaTime)
 {
-	GEngine->AddOnScreenDebugMessage(0, 0.f, FColor::Green, (TEXT("%s"), *FString::SanitizeFloat(OverlappingEnemies.Num())));
+	//GEngine->AddOnScreenDebugMessage(0, 0.f, FColor::Green, (TEXT("%s"), *FString::SanitizeFloat(OverlappingEnemies.Num())));
 	if (!FMath::IsNearlyZero(CurrentDamageBeingDealt))
 	{
 		CurrentLife -= (CurrentDamageBeingDealt * DeltaTime);
 		
-
-		if (CurrentLife <= 0.f)
+		if (CurrentLife <= 0.f && !bHasBeenDestroyed)
 		{
 			OnTrapDestroyed();
 		}
+/** Keep only in case of having a visible health widget 
 		else if (WidgetComp)
 		{
 			if (!WidgetComp->IsVisible())
@@ -150,11 +152,13 @@ void AHDItemsTraps::CheckForDamage(float DeltaTime)
 			const float CurrentLifeAsPercent = 1 - ((StartingLife - CurrentLife) / StartingLife);
 			OnTrapHit.Broadcast(UserWidget, CurrentLifeAsPercent);
 		}
+*/
 	}
 }
 
 void AHDItemsTraps::SetWidgetInfo()
 {
+/** Keep only in case of having a visible health widget 
 	if (WidgetComp)
 	{
 		WidgetLocationAtStart = WidgetComp->GetRelativeLocation();
@@ -168,10 +172,13 @@ void AHDItemsTraps::SetWidgetInfo()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("WidgetInfo has not been set for %s"), *GetName());
 	}
+*/
 }
 
 void AHDItemsTraps::OnTrapDestroyed()
 {
+	bHasBeenDestroyed = true;
+	
 	if (OverlappingEnemies.Num() > 0)
 	{
 		for (int32 i = OverlappingEnemies.Num() - 1; i >= 0; --i)
@@ -192,6 +199,9 @@ void AHDItemsTraps::OnTrapDestroyed()
 	OverlappingEnemies.Empty();
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ItemMesh->SetGenerateOverlapEvents(false);
+
+/** Keep only in case of having a visible health widget 	
 	WidgetComp->SetVisibility(false);
-	//this->Destroy();
+*/
+	this->Destroy();
 }

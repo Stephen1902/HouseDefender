@@ -18,6 +18,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "Engine/SkeletalMeshSocket.h"
+
 // Sets default values
 AHDPlayerCharacter::AHDPlayerCharacter()
 {
@@ -120,12 +122,12 @@ void AHDPlayerCharacter::Fire()
 	CollisionParams.bReturnPhysicalMaterial = true;
 
 	// TODO Remove this line
-		DrawDebugLine(GetWorld(), StartLoc, EndLoc, FColor::Green, true);
+	DrawDebugLine(GetWorld(), StartLoc, EndLoc, FColor::Green, true);
 	
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLoc, EndLoc, ECC_Visibility, CollisionParams))
 	{
 		// Check if what was hit by the line trace was an enemy character
-		if (AHDEnemyMaster* EnemyMaster = Cast<AHDEnemyMaster>(HitResult.GetActor()))
+		if (AHDEnemyMaster* EnemyMasterRef = Cast<AHDEnemyMaster>(HitResult.GetActor()))
 		{
 			// Check location hit by line trace to see if extra damage is required
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
@@ -147,7 +149,7 @@ void AHDPlayerCharacter::Fire()
 				break;
 			}
 
-			EnemyMaster->SetCurrentLife(WeaponInfoArray[CurrentWeaponIndex].DamagePerShot * DamageMultiplier * ArmourPenalty);			
+			EnemyMasterRef->SetCurrentLife(WeaponInfoArray[CurrentWeaponIndex].DamagePerShot * DamageMultiplier * ArmourPenalty);			
 		}
 	}
 }
@@ -177,6 +179,8 @@ void AHDPlayerCharacter::BeginPlay()
 	
 	GetTargetPoints();
 	//SetDayStartCameraLocation();
+
+
 }
 
 // Called every frame
@@ -210,7 +214,6 @@ void AHDPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAxis("LookUp", this, &AHDPlayerCharacter::LookUp);
 //	PlayerInputComponent->BindAxis("LookRight", this, &AHDPlayerCharacter::LookRight);
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AHDPlayerCharacter::TryToFire);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AHDPlayerCharacter::ManualReload);
 	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot1", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 0);
 	PlayerInputComponent->BindAction<FKeyboardWeaponSelect>("SelectSlot2", IE_Pressed, this, &AHDPlayerCharacter::WeaponSelected, 1);
@@ -317,7 +320,7 @@ void AHDPlayerCharacter::GetTargetPoints()
 
 void AHDPlayerCharacter::SetDayStartCameraLocation()
 {
-	// This will give a "side on" view to give the player a 2D perspective of incoming enemies
+	// This will give a "side on" view to give the player a 2.5D perspective of incoming enemies
 	FVector CurrentCameraLocation = DayViewLocation->GetActorLocation();
 
 	// Get the midway point between the player location at day start and enemy spawn point

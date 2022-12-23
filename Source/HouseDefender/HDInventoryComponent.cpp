@@ -2,7 +2,6 @@
 
 
 #include "HDInventoryComponent.h"
-#include "HDItems.h"
 
 // Sets default values for this component's properties
 UHDInventoryComponent::UHDInventoryComponent()
@@ -14,69 +13,58 @@ UHDInventoryComponent::UHDInventoryComponent()
 	MaxCoins = -1.f;
 }
 
-// Called when the game starts
-void UHDInventoryComponent::BeginPlay()
+void UHDInventoryComponent::AddDroppedItem(const FName ProductIdIn, int32 QuantityIn, bool& SuccessOut)
 {
-	Super::BeginPlay();
-
-	// ...
-}
-
-bool UHDInventoryComponent::AddDroppedItem(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn)
-{
-	bool bItemAddedSuccessfully = false;
-	
-	if (ItemClassIn)
+	// Check if the ProductID already exists in the map
+	if (ItemMap.Find(ProductIdIn))
 	{
-		if (ItemMap.Find(ItemClassIn))
-		{
-			const int32 CurrentQty = ItemMap[ItemClassIn];
-			ItemMap.Add(ItemClassIn, QuantityIn + CurrentQty);
-			bItemAddedSuccessfully = true;
-		}
-		else
-		{
-			ItemMap.Add(ItemClassIn, QuantityIn);
-			bItemAddedSuccessfully = true;
-		}
+		// Overwrite the existing product ID with the current quantity plus quantity to be added
+		const int32 CurrentQty = ItemMap[ProductIdIn];		
+		ItemMap.Add(ProductIdIn, QuantityIn + CurrentQty);
+	}
+	else
+	{
+		// Create the key with the quantity added
+		ItemMap.Add(ProductIdIn, QuantityIn);
 	}
 
-	return bItemAddedSuccessfully;
+	SuccessOut = true;
 }
 
-void UHDInventoryComponent::QueryInventory(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut)
+void UHDInventoryComponent::QueryInventory(const FName ProductIdIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut)
 {
-	SuccessOut = false;
-	QuantityOut = 0;
-
-	if (ItemClassIn)
+	if (ItemMap.Find(ProductIdIn))// && QuantityIn >= ItemMap[ProductIdIn])
 	{
-		if (ItemMap.Find(ItemClassIn) && QuantityIn >= ItemMap[ItemClassIn])
-		{
-			SuccessOut = true;
-			QuantityOut = *ItemMap.Find(ItemClassIn);
-		}
+		SuccessOut = true;
+		QuantityOut = *ItemMap.Find(ProductIdIn);
+	}
+	else
+	{
+		SuccessOut = false;
+		QuantityOut = 0;
 	}
 }
 
-void UHDInventoryComponent::RemoveItemFromInventory(const TSubclassOf<AHDItems> ItemClassIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut)
+void UHDInventoryComponent::RemoveItemFromInventory(const FName ProductIdIn, int32 QuantityIn, int32& QuantityOut, bool& SuccessOut)
 {
-	SuccessOut = false;
-	QuantityOut = 0;
+	int32 QuantityFromQuery = 0;
+	bool SuccessFromQuery = false;
 
-	if (ItemClassIn)
+	// Get the quantity the player has of the item needed to craft the item from ProductIdIn. Stored in QuantityFromQuery.
+	QueryInventory(ProductIdIn, QuantityIn, QuantityFromQuery, SuccessFromQuery);
+
+	if (SuccessFromQuery)
 	{
-		int32 QuantityFromQuery = 0;
-		bool SuccessFromQuery = false;
-
-		QueryInventory(ItemClassIn, QuantityIn, QuantityFromQuery, SuccessFromQuery);
-
-		if (SuccessFromQuery)
-		{
-			QuantityOut = QuantityIn - QuantityFromQuery;
-			ItemMap.Add(ItemClassIn, QuantityOut);
-			SuccessOut = true;
-		}
+		// Remove the amount needed from the player inventory
+		QuantityOut = QuantityFromQuery - QuantityIn;
+		// Update the Map with the new quantity
+		ItemMap.Add(ProductIdIn, QuantityOut);
+		SuccessOut = true;
+	}
+	else
+	{
+		SuccessOut = false;
+		QuantityOut = 0;
 	}
 }
 
